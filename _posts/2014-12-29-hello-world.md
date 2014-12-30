@@ -22,6 +22,6 @@ main()
 
 > Hello World!
 
-This github.io page was created using poole.  
-It's an immensely useful tool and one we encourage you to use here with Hyde.
-Find out more by [visiting the project on GitHub](https://github.com/mojombo/jekyll).
+*This github.io page was created using poole.  
+It's an immensely useful tool and you should check it out.
+Find out more by [visiting the project on GitHub](https://github.com/mojombo/jekyll).*
