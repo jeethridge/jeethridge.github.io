@@ -5,15 +5,15 @@ title: About
 
 <p class="message">
   Hello, my name is James Ethridge. I enjoy embedded design, working with Machine to Machine (M2M)
-  communications, developing IoTs applications and modular synthesizers!
+  communications, developing IoTs applications and designing software for music electronics.
   Perhaps one day soon I'll find a way to combine all of those interests into something special ;)
 </p>
 
-Since most of the IoTs work I'm currently doing is for a private employer,
-I won't be discussing much on that topic here just this moment.
+*Since most of the IoTs work I'm currently doing is for a private employer,
+I won't be discussing much on that topic here just this moment.*
 
-A lot of my personal work goes into developing products for an emerging Music Electronics
-and Synthesizer manufacturer called [Rabid Elephant](http://www.rabidelephant.com).
+A lot of my personal work goes into developing products for an emerging music electronics
+and synthesizer manufacturer called [Rabid Elephant](http://www.rabidelephant.com).
 
 In the past, I developed and tested the production code for [MidiBrains](http://www.rabidelephant.com/products/midibrains/index.html).
 
