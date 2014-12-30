@@ -20,8 +20,8 @@ In the past, I developed and tested the production code for [MidiBrains](http://
 Currently, I'm working on a midi-enabled voltage controlled sequential switch
 called the [Sololoquy](http://www.rabidelephant.com).
 
-I've also become interesting in developing more re-usable and robust embedded
-design patters, which I'll be sharing on [GitHub](https://github.com/poole).
+I've also become interested in developing more re-usable and robust embedded
+design patterns, which I'll be sharing on [GitHub](https://github.com/poole).
 
 Thanks for reading!
 
