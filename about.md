@@ -23,6 +23,7 @@ called the [Sololoquy](http://www.rabidelephant.com).
 I've also become interested in developing more re-usable and robust embedded
 design patterns, which I'll be sharing on [GitHub](https://github.com/poole).
 
+
 Thanks for reading!
 
 *This github.io page was created using poole, written by Mark Otto.  
