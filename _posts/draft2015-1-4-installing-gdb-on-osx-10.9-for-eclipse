@@ -1,0 +1,17 @@
+follow this post up until the signing part
+
+http://ntraft.com/installing-gdb-on-os-x-mavericks/
+
+instead of certifying you can simply change the arguments
+in taskgated as detailed here
+http://stackoverflow.com/questions/20022230/how-to-install-gdb-on-osx-10-9
+and here
+http://trac.macports.org/ticket/39349#comment:6
+
+pick up back here with getting it work in eclipse
+http://ntraft.com/installing-gdb-on-os-x-mavericks/
+
+still getting error saying gdb needs to be signed though...
+
+gave up and followed here to sign...
+http://stackoverflow.com/questions/13913818/how-to-get-a-codesigned-gdb-on-osx
