@@ -11,7 +11,7 @@ relative_permalinks: true
 # Setup
 title:               James Ethridge
 tagline:             'github.io'
-description:         'James Ethridge is a software engineer currently residing in the greater Philadelphia area.'
+description:         'James Ethridge is a softwae engineer residing in New York, NY.'
 url:                 http://jeethridge.github.io/
 baseurl:             /
 paginate:            5

@@ -1,31 +1,49 @@
 ---
 layout: page
-title: About
+title: About Me
 ---
 
 <p class="message">
-  Hello, my name is James Ethridge. I enjoy embedded design, working with Machine to Machine (M2M)
-  communications, developing IoTs applications and designing software for music electronics.
-  Perhaps one day soon I'll find a way to combine all of those interests into something special ;)
+  Hi, I'm James. I'm a software engineer and a music geek. I develop software
+  for embedded applications, distributed systems, and electronic music products.
+  As a developer I frequently work on embedded platforms for distributed systems,
+  signal processing and controls applications. As an engineer, I enjoy engaging
+  in the product development process and implementing strategies for moving from
+  prototype to production. In particular, I'm interested in finding ways that
+  TDD, CI, and Agile methodologies can be used to improve the quality of embedded
+  products and the productivity of cross disciplinary engineering teams.
 </p>
 
-*Since most of the IoTs work I'm currently doing is for a private employer,
-I won't be discussing much on that topic here just this moment.*
+Over the past three years I've designed and implemented mission-critical software
+for distributed energy harvesting and power conversion systems in the renewable
+energy sector. The majority of my work in this field is comprised of developing
+embedded applications around messaging oriented middleware. I've developed and
+integrated applications that run on bare-metal and RTOS platforms. I've also
+contributed to the development of libraries that were provided LabVIEW bindings
+on the CompactRIO embedded Linux platform. We don't have a backend guy,
+so I've also had to develop a monitoring application that will writes to time-series
+databases or cache to Redis.
 
-A lot of my personal work goes into developing products for an emerging music electronics
-and synthesizer manufacturer called [Rabid Elephant](http://www.rabidelephant.com).
+In my free time, I collaborate to develop products with some long-time friends
+and colleague under the [Rabid Elephant](http://www.rabidelephant.com) trade name.
 
-In the past, I developed and tested the production code for [MidiBrains](http://www.rabidelephant.com/products/midibrains/index.html).
+[MidiBrains](http://www.rabidelephant.com/products/midibrains/index.html) is a
+DIY MIDI retrofit kit for stompboxes. It includes a lightweight MIDI
+implementation, a slick UI consisting of one button and one LED, and
+an awesome small form-factor pcb/insert that fits in a 9v
+battery cradle. The retrofit proved a bit too difficult for this to gain real momentum.
+We found even guitar techs needed considerably more support than we anticipated.
+Still, it was the first product we did and it has a special place in my heart.
+We still have them in several amps and pedals in our rigs, and a handful
+of professional musicians from NJ to Costa Rica are using them as well. I'm
+extremely proud that we've never had any software bug reports or failures in
+5 years. Software acceptance testing for this product was semi-automated and
+took 3 days to complete.
 
-Currently, I'm working on a midi-enabled voltage controlled sequential switch
-called the [Sololoquy](http://www.rabidelephant.com).
-
-I've also become interested in developing more re-usable and robust embedded
-design patterns, which I'll be sharing on [GitHub](https://github.com/jeethridge).
-
-
-Thanks for reading!
-
-*This github.io page was created using poole, written by Mark Otto.  
-It's an immensely useful tool and one I encourage you to try.
-Find out more by [visiting the project on GitHub](https://github.com/mojombo/jekyll).*
+The [Sololoquy](http://www.rabidelephant.com/products/sololoquy/index.html) is a
+voltage controlled sequential switch intended to provide a solution for on the
+fly patch routing and sequencing in Eurorack format modular synthesizers.
+It's got a rich feature set and highly playable user interface, making it suitable
+for both automation and live performance. In tandem with Sololoquy, I'm working
+on a python utility for updating firmware via MIDI which will be featured
+on several other products in the line.
