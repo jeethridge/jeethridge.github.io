@@ -16,29 +16,29 @@ title: About Me
 
 Over the past three years I've designed and implemented mission-critical software
 for distributed energy harvesting and power conversion systems in the renewable
-energy sector. The majority of my work in this field is comprised of developing
-embedded applications around messaging oriented middleware. I've developed and
-integrated applications that run on bare-metal and RTOS platforms. I've also
-contributed to the development of libraries that were provided LabVIEW bindings
-on the CompactRIO embedded Linux platform. We don't have a backend guy,
-so I've also had to develop a monitoring application that will writes to time-series
-databases or cache to Redis.
+energy sector. A significant amount of the work I've in this field has involved
+developing embedded applications around messaging oriented middleware. I've worked
+on libraries and applications that run on bare-metal, RTOS, and embedded linux
+platforms. In the latter case, I maintained a set of C++ libraries
+which provided LabVIEW bindings to middleware on the CompactRIO platform.
+I've also prototyped a monitoring application that records data published
+by various embedded systems to a time-series database or caches to Redis.
 
 In my free time, I collaborate to develop products with some long-time friends
 and colleague under the [Rabid Elephant](http://www.rabidelephant.com) trade name.
 
 [MidiBrains](http://www.rabidelephant.com/products/midibrains/index.html) is a
-DIY MIDI retrofit kit for stompboxes. It includes a lightweight MIDI
+DIY MIDI retrofit kit for stomp-boxes. It includes a lightweight MIDI
 implementation, a slick UI consisting of one button and one LED, and
-an awesome small form-factor pcb/insert that fits in a 9v
-battery cradle. The retrofit proved a bit too difficult for this to gain real momentum.
+a nice small form-factor pcb/insert that fits in a 9v battery cradle.
+Unfortunately, the retrofit proved a bit too difficult for this to gain any real momentum.
 We found even guitar techs needed considerably more support than we anticipated.
 Still, it was the first product we did and it has a special place in my heart.
-We still have them in several amps and pedals in our rigs, and a handful
-of professional musicians from NJ to Costa Rica are using them as well. I'm
-extremely proud that we've never had any software bug reports or failures in
-5 years. Software acceptance testing for this product was semi-automated and
-took 3 days to complete.
+In addition to our own basements, they're still floating around out there with
+a handful of professional musicians from NJ to Costa Rica. I'm particularly
+proud that we've never had any software bug reports or failures in
+the 5 years they've been in the wild. Software acceptance testing for this product
+was semi-automated and took about 3 days to complete.
 
 The [Sololoquy](http://www.rabidelephant.com/products/sololoquy/index.html) is a
 voltage controlled sequential switch intended to provide a solution for on the
