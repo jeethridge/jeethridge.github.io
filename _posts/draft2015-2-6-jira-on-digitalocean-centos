@@ -1,90 +1,0 @@
-1.
-Visit DigitalOcean.com and create an account.
-https://www.digitalocean.com
-[ or https://www.digitalocean.com/?refcode=f1f3befc8e75 if you want to give me some referral points which are always welcome :) ]
-
-2.
-Create a "Droplet" - your SSD VPS
-Assign a hostname, pick a size, select a region, and choose your Linux distro.
-CENTOS 6.4 X64 512 MB / 1 CPU / 20GB SSD DISK, 1TB TRANSFER = $5 PER MONTH
-
-3.
-Use puTTy or kiTTy to connect to your new server
-It literally takes less than a minute for your new server to be spun up. DigitalOcean will email you the IP Address and root password when it is ready.
-yum update
-yum install wget
-Install JAVA
-https://www.digitalocean.com/community/tutorials/how-to-install-java-on-centos-and-fedora
-
-sudo wget --no-cookies --no-check-certificate --header "Cookie: gpw_e24=http%3A%2F%2Fwww.oracle.com%2F; oraclelicense=accept-securebackup-cookie" \
-"http://download.oracle.com/otn-pub/java/jdk/8u25-b17/jre-8u25-linux-x64.tar.gz"
-
-sudo tar xvf jre-8u25-linux-x64.tar.gz
-sudo chown -R root: jre1.8.0_25
-sudo alternatives --install /usr/bin/java java /opt/jre1.8.0_25/bin/java 1
-sudo rm /opt/jre-8u25-linux-x64.tar.gz
-
-set java home
-export JAVA_HOME=/opt/jre1.8.0_25
-
-4.
-Update, Download and Extract
-
-cd /tmp/
-I Skipped
-wget http://www.atlassian.com/software/confluence/downloads/binary/atlassian-confluence-5.5.3-x64.bin
-
-wget http://www.atlassian.com/software/jira/downloads/binary/atlassian-jira-6.3.13-x64.bin
-wget http://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-5.1.34.tar.gz
-tar -xvzf mysql-connector-java-5.1.34.tar.gz
-chmod +x *.bin
-
-
-5.
-Install MySQL
-see this
-https://www.digitalocean.com/community/tutorials/how-to-install-linux-apache-mysql-php-lamp-stack-on-centos-7
-
-yum install mariadb-server mariadb
-sudo systemctl start mariadb
-sudo mysql_secure_installation
-sudo systemctl enable mariadb.service
-
-say yes to all options in the console wizard during secure install
-
-6.
-Install JIRA
-mysql -u root -p CREATE DATABASE jiradb CHARACTER SET utf8 COLLATE utf8_bin; GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, INDEX on jiradb.* TO 'jirauser'@'localhost' IDENTIFIED BY 'apollod0g!’ ; FLUSH PRIVILEGES; QUIT
-* be sure to change to the password of your choice
-cd /tmp/ ./atlassian-jira-6.3.13-x64.bin * Accept all defaults (standard settings, port 8080, etc.)
-**************************************** IF YOU GET A JAVA HEAP ERROR ****************************************
-If you get a Java Heap error when the service tries to start, modify the JVM settings:
-vi /opt/atlassian/jira/bin/setenv.sh
-Arrow down and set the following: JVM_MINIMUM_MEMORY="128m" JVM_MAXIMUM_MEMORY="256m"
-Press Shift+Z twice
-Then start the Jira service:
-service jira start
-**************************************
-cd mysql-connector-java-5.1.34
-cp *.jar /opt/atlassian/jira/lib/
-service jira stop
-service jira start
-
-
-7.
-Redirect port 8080 to port 80
-I SKIPPED THIS STEP!
-iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 8080
-
-
-8.
-Visit your new JIRA installation
-Open a web browser and go to http://<the_ip_of_your_vps>; to configure JIRA.
-Database type: MySQL Database host: localhost Database user: jirauser Database user password: <your password> Database: jiradb
-
-I made the changes found here to the JIRA setenv file
-http://stackoverflow.com/questions/11788593/getting-jira-to-run-on-amazon-ec2-t1-micro-instance
-
-Than I added 2 GB of swap to the server by following THIS digital ocean tutorial
-https://www.digitalocean.com/community/tutorials/how-to-add-swap-on-centos-7
-I left swampiness and cache pressure as defaults for now
