@@ -94,16 +94,36 @@ so the morph is a function of time.
 
 **v3, fruiting block** (`prototypes/fruiting-block/index.html`, current
 direction). One true 3-D block, not layers. A 28³ voxel grid of nutrient
-weights comes from 3-D value noise plus three to five hotspots. Nine spores
-sit on the block's twelve edges and grow inward. Tips move in three
-dimensions up the nutrient gradient. Rich voxels grow organic strands with
-shallow branches. Poor voxels grow circuit traces on a 26-direction lattice
-with right-angle branches and vias. Tips fuse on contact. A perspective
-camera projects every strand into five depth-of-field canvases, blurred by
-distance from the focal plane. The camera orbits a few degrees from pointer
-position, with an optional slow idle orbit. Rich voxels show as faint dust so
-the volume reads without hiding the network. The block outline is a hairline.
-Generations hold, fade, and regrow as in v2.
+weights comes from 3-D value noise plus three to five hotspots. Eight spores
+sit on the block's twelve edges and grow inward.
+
+Growth follows the neighbour-sensing model of fungal morphogenesis
+(Meskauskas, Fricker and Moore, 2004) with nutrient uptake in the style of
+Boswell and colleagues (2003):
+
+- Tips extend at a Monod rate in local nutrient, with a small floor.
+- Tips steer by three tropisms: negative autotropism away from the gradient
+  of a hyphal-density grid (the strongest term, so the colony spreads as a
+  front), chemotropism up the nutrient gradient, and a slow random wander.
+  A turn-rate limit keeps hyphae nearly straight.
+- Lateral branches leave the parent at 65° ± 14° in a random plane. The
+  internode distance shortens with nutrient (0.07 world units rich, 0.26
+  poor). Tips deplete nutrient as they pass.
+- Anastomosis: a tip within a small radius of another hypha fuses with
+  probability 0.6.
+- A hypha that meets a block wall turns along it and stops after three
+  bounces. Tips starve after a grace period on poor ground.
+- Poor voxels snap headings to a 26-direction lattice with right-angle
+  branches and vias, so traces read as circuitry. Rich voxels keep the
+  organic rules.
+
+Rendering: a perspective camera (distance 2.25 block half-widths) projects
+every hypha into seven depth-of-field canvases, blurred by distance from the
+focal plane. Each hypha is a two-pass tube: a dark wide stroke and a bright
+narrow core. Far bins fog toward the background. Older hyphae thicken into
+cords over sixty seconds. The substrate is faint dust only: green in rich
+voxels, fainter purple in poor voxels, no outline. The camera orbits with the
+pointer, with an optional slow idle orbit. Generations hold, fade, and regrow.
 
 **v2, substrate network** (`prototypes/substrate/index.html`, superseded:
 four flat layers read as a moving field, not a volume). Four layers. A seeded 3-D value-noise field plus two or three
@@ -143,7 +163,9 @@ Reduced-motion users get one fully grown network, no fade, no parallax.
 | 2026-11-24 | Growth follows a nutrient field (v2) rather than a time clock (v1) | The user asked for a 3-D substrate, edge-seeded growth along a gradient, and a style set by local density. |
 | 2026-11-24 | More depth: four layers, parallax up to 42 px, near layer blurred at 3.6 px | The user asked for more depth and more blur on the nearest strands. |
 | 2026-11-24 | True 3-D simulation (v3) over layered 2-D fields (v2) | The user wants a physical system: a mycelium network growing through a fruiting block, watched in 3-D space. Layers with parallax read as a moving field. |
-| 2026-11-24 | Substrate barely visible: faint dust in rich voxels, hairline block outline | The user asked for a transparent substrate so the network is the subject. |
+| 2026-11-24 | Substrate barely visible: faint dust only, no block outline | The user asked for a transparent substrate and no visible cube edges. Perspective carries the volume. |
+| 2026-11-24 | Growth rules from the neighbour-sensing model, not ad hoc steering | The user wants a digital twin of an organic process. Negative autotropism and lateral branching are what make a colony look like a colony. |
+| 2026-11-24 | Hyphae rendered as shaded tubes with fog and cords | The user asked for strands that look three-dimensional. |
 
 ## Open questions
 

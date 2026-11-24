@@ -39,9 +39,11 @@ Done:
 - Background prototype v2 (superseded): four flat layers over a 2-D field.
   Published copy: https://claude.ai/artifact/WPS56o5hPdxdiN6k5xHMsh
 - Background prototype v3 (current direction): one 3-D voxel block, spores
-  on the block edges, growth in three dimensions up the nutrient gradient,
-  density-driven circuit-or-organic style, fusion on contact, perspective
-  camera into five depth-of-field canvases, hold-fade-regrow generations.
+  on the block edges, neighbour-sensing growth (autotropism, chemotropism,
+  lateral branching, anastomosis, Monod extension), density-driven
+  circuit-or-organic style, perspective camera into seven depth-of-field
+  canvases, two-pass tube rendering with fog and cords, dust-only substrate,
+  hold-fade-regrow generations.
   Published copy: https://claude.ai/artifact/ABsSSFFQttPcM38vC4qP1S
 - Design canvas: https://claude.ai/artifact/TRuAqofEhxja5YHQSnxniR
 
@@ -66,9 +68,14 @@ Not started:
    circuit-versus-organic split, camera motion (idle orbit on or off), and
    fade timing.
 2. Tune the constants under `tunables` in that file (`N`, `SPORES`,
-   `MAX_TIPS`, `BASE_SPEED`, `FUSE_R`, `STARVE`, `GROW_LIMIT`, `HOLD`, `FADE`,
-   `DIST`, `FILL`, `IDLE_ORBIT`, `POINTER_ORBIT`) from those reactions.
-   Commit as a checkpoint.
+   `MAX_TIPS`, `VMAX`, `K_NUTRIENT`, `W_CHEMO`, `W_AUTO`, `W_WANDER`,
+   `TURN_RATE`, `INTERNODE_RICH`, `INTERNODE_POOR`, `BRANCH_ANGLE`, `FUSE_R`,
+   `FUSE_P`, `STARVE`, `GROW_LIMIT`, `HOLD`, `FADE`, `DIST`, `FILL`,
+   `IDLE_ORBIT`, `POINTER_ORBIT`) from those reactions. Commit as a checkpoint.
+   Known bias: spores sit on the block faces where nutrient is lowest, so
+   early growth reads mostly as purple traces. If the user wants more organic
+   growth early, move hotspots toward the faces or raise the floor of the
+   extension rate.
 3. Decide open question 1 (code block or prose) and record it in the brief.
 4. Decide the static site generator (open question 2) and scaffold it in
    this repo on the same branch.
