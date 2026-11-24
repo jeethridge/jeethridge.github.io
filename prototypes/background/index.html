@@ -22,11 +22,11 @@ body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--mono);font-
 #bg{position:fixed;inset:0;z-index:0;overflow:hidden;
   background:
     radial-gradient(circle at 1px 1px, rgba(68,71,90,0.42) 0.8px, transparent 1px) 0 0 / 28px 28px,
-    radial-gradient(ellipse 70% 60% at 50% 42%, var(--bg-lift) 0%, var(--bg) 58%, var(--bg-deep) 100%);}
+    radial-gradient(ellipse 70% 60% at 50% 42%, var(--bg-lift) 0%, var(--bg) 52%, #191A22 100%);}
 #bg canvas{position:absolute;left:-6%;top:-6%;width:112%;height:112%;will-change:transform}
-.layer-far{filter:blur(3px);opacity:.65}
+.layer-far{filter:blur(4px);opacity:.6}
 .layer-mid{opacity:1}
-.layer-near{filter:blur(1.6px);opacity:.85}
+.layer-near{filter:blur(3.2px);opacity:.85}
 
 main{position:relative;z-index:1;min-height:100%;box-sizing:border-box;display:flex;align-items:center;justify-content:center;
   padding-block:40px;padding-left:max(16px, env(safe-area-inset-left,0px));padding-right:max(16px, env(safe-area-inset-right,0px))}
@@ -213,10 +213,11 @@ button.go{color:var(--green);border-color:rgba(80,250,123,.5)}
 
   // Three depth layers. depth = parallax travel in px, fade = seconds a point stays visible, pop = target hypha count.
   var LAYERS = [
-    { depth: 6,  speed: 0.55, pop: 16, fade: 28, width: 1.1, leaf: 0.75 },
-    { depth: 14, speed: 1.0,  pop: 13, fade: 21, width: 1.6, leaf: 1.0 },
-    { depth: 28, speed: 1.4,  pop: 7,  fade: 15, width: 2.3, leaf: 1.4 }
+    { depth: 8,  speed: 0.55, pop: 16, fade: 28, width: 1.0, leaf: 0 },
+    { depth: 18, speed: 1.0,  pop: 13, fade: 21, width: 1.6, leaf: 0 },
+    { depth: 40, speed: 1.4,  pop: 7,  fade: 15, width: 2.6, leaf: 0 }
   ];
+  // leaf: size multiplier for leaf marks on a layer. 0 turns leaves off; buds and pads stay.
   var CYCLE = 90; // seconds for one silicon-to-bio-to-silicon breath
   var MORPH_SECONDS = 38; // how long a hypha takes to cross the whole substrate range
 
@@ -299,7 +300,7 @@ button.go{color:var(--green);border-color:rgba(80,250,123,.5)}
     if (dx * dx + dy * dy > 9) a.pts.push({ x: a.x, y: a.y, t: now });
 
     // Leaves appear once the hypha is more bio than silicon.
-    if (o > 0.6 && now - a.lastLeaf > 1.2 && rnd() < 0.9 * dt) {
+    if (L.leaf > 0 && o > 0.6 && now - a.lastLeaf > 1.2 && rnd() < 0.9 * dt) {
       a.lastLeaf = now;
       a.items.push({ k: 'leaf', x: a.x, y: a.y, t: now, o: o, ang: h + (rnd() < 0.5 ? 1 : -1) * (0.7 + rnd() * 0.5), size: (5 + rnd() * 6) * L.leaf });
     }
