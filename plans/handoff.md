@@ -7,6 +7,8 @@ Written 2026-11-24 for a fresh session with no prior context.
 - Repo: `~/projects/jeethridge.github.io`, remote `origin` on GitHub.
   Nothing from this work is pushed.
 - Tag `legacy-jekyll-2015`: the retired Jekyll site, local tag only.
+- Tag `checkpoint-2026-11-24-pockets`: the fruiting block before the
+  smoothing pass (per-run circuit mode, midpoint curves, no tip dot).
 - `main`: one new commit on top of the Jekyll history that removes the old
   site and adds the scaffold (`README.md`, `AGENTS.md`, `.gitignore`). The
   local branch is renamed from `master`. The remote default is still

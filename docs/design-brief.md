@@ -169,6 +169,9 @@ Reduced-motion users get one fully grown network, no fade, no parallax.
 | 2026-11-24 | Growth rules from the neighbour-sensing model, not ad hoc steering | The user wants a digital twin of an organic process. Negative autotropism and lateral branching are what make a colony look like a colony. |
 | 2026-11-24 | Hyphae rendered as shaded tubes with fog and cords | The user asked for strands that look three-dimensional. |
 | 2026-11-24 | Rich substrate with low-nutrient pockets, not poor substrate with hotspots | The user's call. Organic growth is the norm, traces mark the hard-to-colonize pockets. |
+| 2026-11-24 | Strands drawn as smooth curves through point midpoints, no tip dot | The user saw kinks and "a line chasing a dot". |
+| 2026-11-24 | Circuit behavior switches per run, with probability (1 − o)², and corners sharpen as nutrient falls | Blending directions every frame caused kinks. Per-run switching makes the organic-to-circuit transformation visible. |
+| 2026-11-24 | Sigmoid extension rate (half-saturation 0.35) and fewer tips (40) | The user asked for pockets that take much longer and a less jumbled colony. |
 
 ## Open questions
 
