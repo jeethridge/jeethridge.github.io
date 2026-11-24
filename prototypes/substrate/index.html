@@ -265,14 +265,18 @@ button.go{color:var(--green);border-color:rgba(80,250,123,.5)}
     S.tips = [];
     S.seedPts = [];
   }
-  function sample(S, x, y) {
+  // sample: nutrient left after depletion, used for the gradient so tips avoid eaten ground.
+  // sampleRaw: the field itself, used for growth style and starvation so a tip never starves on its own trail.
+  function sampleWith(S, x, y, depleted) {
     var fx = x / CELL, fy = y / CELL, gx = Math.floor(fx), gy = Math.floor(fy);
     if (gx < 0 || gy < 0 || gx >= S.gw - 1 || gy >= S.gh - 1) return 0;
     var tx = fx - gx, ty = fy - gy, i = gy * S.gw + gx;
-    function v(k) { return S.n[k] - S.dep[k]; }
+    function v(k) { return depleted ? S.n[k] - S.dep[k] : S.n[k]; }
     var a = v(i) + (v(i + 1) - v(i)) * tx, b = v(i + S.gw) + (v(i + S.gw + 1) - v(i + S.gw)) * tx;
     return clamp01(a + (b - a) * ty);
   }
+  function sample(S, x, y) { return sampleWith(S, x, y, true); }
+  function sampleRaw(S, x, y) { return sampleWith(S, x, y, false); }
   function grad(S, x, y) {
     var e = CELL * 1.5;
     return { x: (sample(S, x + e, y) - sample(S, x - e, y)) / (2 * e), y: (sample(S, x, y + e) - sample(S, x, y - e)) / (2 * e) };
@@ -283,7 +287,7 @@ button.go{color:var(--green);border-color:rgba(80,250,123,.5)}
       var cx = gx + dx, cy = gy + dy;
       if (cx < 0 || cy < 0 || cx >= S.gw || cy >= S.gh) continue;
       var k = cy * S.gw + cx, w = (dx === 0 && dy === 0) ? 1 : 0.35;
-      S.dep[k] = Math.min(0.95, S.dep[k] + amt * w);
+      S.dep[k] = Math.min(0.7, S.dep[k] + amt * w);
     }
   }
 
@@ -357,7 +361,7 @@ button.go{color:var(--green);border-color:rgba(80,250,123,.5)}
   }
   function stepTip(a, S, L, now, dt) {
     a.age += dt;
-    var d = sample(S, a.x, a.y), g = grad(S, a.x, a.y), gm = Math.sqrt(g.x * g.x + g.y * g.y);
+    var d = sampleRaw(S, a.x, a.y), g = grad(S, a.x, a.y), gm = Math.sqrt(g.x * g.x + g.y * g.y);
     var o = smooth(0.32, 0.78, d); a.o = o;
     var want = gm > 1e-5 ? Math.atan2(g.y, g.x) : a.hOrg;
     // Organic: steer smoothly up the gradient with a slow wander. Circuit: straight runs, then snap to the 45° nearest the gradient.
@@ -379,7 +383,7 @@ button.go{color:var(--green);border-color:rgba(80,250,123,.5)}
     S.ctx.lineWidth = L.width * (1.05 - 0.35 * o);
     S.ctx.beginPath(); S.ctx.moveTo(a.x, a.y); S.ctx.lineTo(nx, ny); S.ctx.stroke();
 
-    deplete(S, nx, ny, 0.8 * dt);
+    deplete(S, nx, ny, 0.35 * dt);
     a.x = nx; a.y = ny; a.len += sp * dt; a.sinceHash += sp * dt;
     if (a.sinceHash > 4) { a.sinceHash = 0; a.idx++; hashAdd(S, a.x, a.y, a.id, a.idx); }
 
@@ -392,9 +396,10 @@ button.go{color:var(--green);border-color:rgba(80,250,123,.5)}
         a.alive = false; joins++; return;
       }
     }
-    if (d < STARVE) a.starve += dt; else a.starve = 0;
+    // Starvation: only after a grace period, so an edge seed on poor ground can reach richer ground.
+    if (a.age > 6 && d < STARVE) a.starve += dt; else a.starve = 0;
     var out = a.x < -4 || a.y < -4 || a.x > W + 4 || a.y > H + 4;
-    if (out || a.starve > 1.4 || a.age > 70) { a.alive = false; if (!out) mark(S, L, a.x, a.y, o); return; }
+    if (out || a.starve > 2.2 || a.age > 70) { a.alive = false; if (!out) mark(S, L, a.x, a.y, o); return; }
     // Branching scales with nutrient density: rich ground branches often, sparse ground rarely.
     if (S.tips.length < L.tips && a.len > 24 && rnd() < (0.02 + 0.4 * d) * dt) {
       var ang = o < 0.5 ? h + (rnd() < 0.5 ? 1 : -1) * Math.PI / 2 : h + (rnd() < 0.5 ? 1 : -1) * (0.5 + rnd() * 0.7);
