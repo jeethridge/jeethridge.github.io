@@ -8,7 +8,9 @@ Written 2026-11-24 for a fresh session with no prior context.
   Nothing from this work is pushed.
 - Tag `legacy-jekyll-2015`: the retired Jekyll site, local tag only.
 - `main`: one new commit on top of the Jekyll history that removes the old
-  site and adds the scaffold (`README.md`, `AGENTS.md`, `.gitignore`).
+  site and adds the scaffold (`README.md`, `AGENTS.md`, `.gitignore`). The
+  local branch is renamed from `master`. The remote default is still
+  `origin/master`.
 - `planning/site-design`: the design brief, canvas exports, the background
   prototype, and this handoff. All committed. Nothing uncommitted.
 
@@ -57,3 +59,5 @@ Not started:
 3. Decide open question 1 (code block or prose) and record it in the brief.
 4. Decide the static site generator (open question 2) and scaffold it in
    this repo on the same branch.
+5. On the first push, with the user's confirmation: push `main` and the tag,
+   then set the GitHub default branch to `main`.
