@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Direction B: Terminal Greenhouse home page</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&amp;family=Fraunces:ital,opsz,wght@1,9..144,300..600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#9BD98B;text-decoration:none}a:hover{color:#E0A84A}
+</style>
+</helmet>
+<div style="width: 1280px; height: 820px; box-sizing: border-box; padding: 40px 56px; display: flex; flex-direction: column; gap: 24px; background: #0E1612; color: #D7E4D2; font-family: 'JetBrains Mono', ui-monospace, monospace; position: relative; overflow: hidden">
+
+  <svg viewBox="0 0 1280 820" width="1280" height="820" aria-hidden="true" style="position: absolute; inset: 0; pointer-events: none">
+    <g fill="none" stroke="#3F7A48" stroke-width="2" stroke-linecap="round" stroke-opacity="0.9">
+      <path d="M-10,700 C80,690 120,640 170,600 C230,550 300,560 340,500 C380,440 420,440 470,400"></path>
+      <path d="M170,600 C150,560 160,520 190,500"></path>
+      <path d="M340,500 C350,470 380,460 400,470"></path>
+      <path d="M1290,120 C1200,140 1180,200 1120,230 C1060,260 1020,320 990,360"></path>
+      <path d="M1120,230 C1130,270 1110,300 1080,310"></path>
+    </g>
+    <g fill="#5E9B5A" fill-opacity="0.85">
+      <ellipse cx="190" cy="498" rx="16" ry="6" transform="rotate(-70 190 498)"></ellipse>
+      <ellipse cx="402" cy="468" rx="15" ry="6" transform="rotate(10 402 468)"></ellipse>
+      <ellipse cx="470" cy="398" rx="17" ry="6.5" transform="rotate(-40 470 398)"></ellipse>
+      <ellipse cx="236" cy="546" rx="12" ry="5" transform="rotate(-50 236 546)"></ellipse>
+      <ellipse cx="1078" cy="312" rx="15" ry="6" transform="rotate(20 1078 312)"></ellipse>
+      <ellipse cx="992" cy="356" rx="16" ry="6" transform="rotate(-50 992 356)"></ellipse>
+      <ellipse cx="1190" cy="140" rx="12" ry="5" transform="rotate(-30 1190 140)"></ellipse>
+    </g>
+  </svg>
+
+  <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border: 1px solid #2B4A36; border-radius: 3px; background: #121D17; font-size: 12px; letter-spacing: 0.04em; color: #7C8F82; position: relative">
+    <div style="display: flex; gap: 22px">
+      <span style="color: #9BD98B">● sys jamesethridge.com</span>
+      <span>greenhouse / terminal 01</span>
+      <span>uptime 15y 02m</span>
+    </div>
+    <div style="display: flex; gap: 22px">
+      <span>seed <span style="color: #E0A84A">7f3a</span></span>
+      <span>2026-11-24 19:31 UTC</span>
+      <a href="#regrow">[ regrow ]</a>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 32px; flex-grow: 1; position: relative">
+
+    <div style="grid-column: span 7; display: flex; flex-direction: column; gap: 20px; padding: 28px 30px; border: 1px solid #2B4A36; border-radius: 3px; background: #10191420">
+      <div style="font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: #7C8F82">&gt; whoami</div>
+      <h1 style="margin: 0; font-size: 62px; line-height: 1.0; font-weight: 700; letter-spacing: -0.03em; color: #E8F1E4">James<br>Ethridge<span style="color: {{accent}}">_</span></h1>
+      <p style="margin: 0; font-family: 'Fraunces', Georgia, serif; font-style: italic; font-size: 28px; line-height: 1.2; font-weight: 400; color: #9BD98B">infrastructure that grows research.</p>
+      <p style="margin: 0; max-width: 540px; font-size: 14.5px; line-height: 1.65; color: #B9C9B4">Staff software engineer. I build and run the data, compute, and ML platforms that scientists and engineers work on. Readouts below are live from the run log.</p>
+
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 6px">
+        <div style="display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border: 1px solid #2B4A36; border-radius: 3px">
+          <span style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #7C8F82">runs</span>
+          <span style="font-size: 26px; font-weight: 500; color: #E8F1E4">04</span>
+          <span style="font-size: 11.5px; color: #9BD98B">1 in progress</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border: 1px solid #2B4A36; border-radius: 3px">
+          <span style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #7C8F82">tech tree</span>
+          <span style="font-size: 26px; font-weight: 500; color: #E8F1E4">38<span style="font-size: 14px; color: #7C8F82">/??</span></span>
+          <span style="font-size: 11.5px; color: #9BD98B">nodes unlocked</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border: 1px solid #2B4A36; border-radius: 3px">
+          <span style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #7C8F82">notebook</span>
+          <span style="font-size: 26px; font-weight: 500; color: #E8F1E4">[n]</span>
+          <span style="font-size: 11.5px; color: #E0A84A">2 abandoned, kept</span>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px">
+        <a href="#runlog" style="padding: 10px 16px; border: 1px solid #9BD98B; border-radius: 3px; font-size: 13px">./run-log</a>
+        <a href="#tree" style="padding: 10px 16px; border: 1px solid #2B4A36; border-radius: 3px; font-size: 13px">./tech-tree</a>
+        <a href="#notebook" style="padding: 10px 16px; border: 1px solid #2B4A36; border-radius: 3px; font-size: 13px">./notebook</a>
+        <a href="#projects" style="padding: 10px 16px; border: 1px solid #2B4A36; border-radius: 3px; font-size: 13px">./projects</a>
+        <a href="#cv" style="padding: 10px 16px; border: 1px solid #2B4A36; border-radius: 3px; font-size: 13px; color: #E0A84A">cv.pdf</a>
+      </div>
+    </div>
+
+    <div style="grid-column: span 5; display: flex; flex-direction: column; gap: 18px">
+      <div style="display: flex; flex-direction: column; gap: 12px; padding: 18px 20px; border: 1px solid #2B4A36; border-radius: 3px; background: #121D17">
+        <div style="display: flex; justify-content: space-between; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #7C8F82">
+          <span>tech tree · branch: platform</span>
+          <span style="color: #9BD98B">4 / 6 unlocked</span>
+        </div>
+        <div style="position: relative; height: 170px">
+          <div style="position: absolute; left: 60px; top: 24px; width: 110px; height: 2px; background: #3F7A48"></div>
+          <div style="position: absolute; left: 170px; top: 24px; width: 2px; height: 56px; background: #3F7A48"></div>
+          <div style="position: absolute; left: 170px; top: 24px; width: 110px; height: 2px; background: #3F7A48"></div>
+          <div style="position: absolute; left: 170px; top: 80px; width: 110px; height: 2px; background: #3F7A48"></div>
+          <div style="position: absolute; left: 280px; top: 80px; width: 2px; height: 56px; background: #2B4A36"></div>
+          <div style="position: absolute; left: 280px; top: 136px; width: 60px; height: 2px; background: #2B4A36"></div>
+          <div style="position: absolute; left: 0; top: 10px; padding: 5px 9px; border: 1px solid #9BD98B; border-radius: 3px; background: #0E1612; font-size: 11px; color: #9BD98B">Linux</div>
+          <div style="position: absolute; left: 118px; top: 10px; padding: 5px 9px; border: 1px solid #9BD98B; border-radius: 3px; background: #0E1612; font-size: 11px; color: #9BD98B">Kubernetes</div>
+          <div style="position: absolute; left: 236px; top: 10px; padding: 5px 9px; border: 1px solid #9BD98B; border-radius: 3px; background: #0E1612; font-size: 11px; color: #9BD98B">Terraform</div>
+          <div style="position: absolute; left: 236px; top: 66px; padding: 5px 9px; border: 1px solid #9BD98B; border-radius: 3px; background: #0E1612; font-size: 11px; color: #9BD98B">Airflow</div>
+          <div style="position: absolute; left: 118px; top: 66px; padding: 5px 9px; border: 1px solid #2B4A36; border-radius: 3px; background: #0E1612; font-size: 11px; color: #7C8F82">Slurm</div>
+          <div style="position: absolute; left: 300px; top: 122px; padding: 5px 9px; border: 1px dashed #E0A84A; border-radius: 3px; background: #0E1612; font-size: 11px; color: #E0A84A">GPU sched</div>
+          <div style="position: absolute; left: 0; bottom: 0; font-size: 10.5px; color: #7C8F82">solid = unlocked · dashed = researching · hover a node to see the run</div>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 8px; padding: 18px 20px; border: 1px solid #2B4A36; border-radius: 3px; background: #121D17; font-size: 12.5px; line-height: 1.6">
+        <div style="display: flex; justify-content: space-between; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #7C8F82">
+          <span>run log · tail -n 4</span>
+          <span>live</span>
+        </div>
+        <div style="display: grid; grid-template-columns: 70px 1fr; gap: 2px 14px; color: #B9C9B4">
+          <span style="color: #7C8F82">2021-06</span><span><span style="color: #9BD98B">run 04</span> enter · Staff Software Engineer, Infrastructure</span>
+          <span style="color: #7C8F82">floor 3</span><span>developer platform rebuilt, <span style="color: #E0A84A">item: Skaffold</span></span>
+          <span style="color: #7C8F82">floor 5</span><span>agentic engineering workflow adopted</span>
+          <span style="color: #7C8F82">now</span><span style="color: #E8F1E4">boss: [the hardest problem of this run]<span style="color: {{accent}}">█</span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #7C8F82; position: relative">
+    <div style="display: flex; gap: 14px; align-items: center">
+      <span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 14px; height: 14px; background: #0E1612; border: 1px solid #2B4A36"></span>soil 0E1612</span>
+      <span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 14px; height: 14px; background: #121D17; border: 1px solid #2B4A36"></span>glass 121D17</span>
+      <span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 14px; height: 14px; background: #9BD98B"></span>phosphor 9BD98B</span>
+      <span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 14px; height: 14px; background: #3F7A48"></span>vine 3F7A48</span>
+      <span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 14px; height: 14px; background: #E0A84A"></span>amber E0A84A</span>
+      <span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 14px; height: 14px; background: #E8F1E4"></span>text E8F1E4</span>
+    </div>
+    <div>JetBrains Mono · Fraunces italic for one line only</div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#E0A84A","options":["#E0A84A","#9BD98B","#F08A5D","#7FB7E0"]},"$preview":{"width":1280,"height":820}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { accent: this.props.accent ?? '#E0A84A' };
+  }
+}
+</script>
+</body>
+</html>

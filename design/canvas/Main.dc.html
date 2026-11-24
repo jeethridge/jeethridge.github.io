@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Direction A: Field Journal home page</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..900,0..100,0..1;1,9..144,300..900,0..100,0..1&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#2F4A3A;text-decoration:none}a:hover{color:#8A561C}
+</style>
+</helmet>
+<div style="width: 1280px; height: 820px; box-sizing: border-box; padding: 44px 64px 40px 64px; display: flex; flex-direction: column; gap: 28px; background: #F3EDE0; color: #1F2621; font-family: 'IBM Plex Sans', system-ui, sans-serif; position: relative; overflow: hidden">
+
+  <div style="display: flex; justify-content: space-between; align-items: baseline; padding-bottom: 12px; border-bottom: 1px solid #2F4A3A; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: #2F4A3A">
+    <div>Field journal · jamesethridge.com</div>
+    <div style="display: flex; gap: 20px">
+      <span>Vol. IV · 2026</span>
+      <a href="#seed" style="color: #8A561C">seed 2026-11-24 · 7f3a · regrow</a>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 40px; flex-grow: 1">
+
+    <div style="grid-column: span 7; display: flex; flex-direction: column; gap: 22px">
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: #2F4A3A">Staff software engineer · infrastructure for research</div>
+      <h1 style="margin: 0; font-family: 'Fraunces', Georgia, serif; font-size: 84px; line-height: 0.95; font-weight: 500; letter-spacing: -0.02em; color: #1F2621; font-variation-settings: 'opsz' 144, 'SOFT' 20">James Ethridge</h1>
+      <p style="margin: 0; font-family: 'Fraunces', Georgia, serif; font-style: italic; font-size: 30px; line-height: 1.2; font-weight: 400; color: #2F4A3A; font-variation-settings: 'opsz' 48, 'WONK' 1, 'SOFT' 40">Platforms for people who do science.</p>
+      <p style="margin: 0; max-width: 560px; font-size: 17px; line-height: 1.55; color: #1F2621">I build and operate the data, compute, and ML platforms that scientists and engineers do their work on. This site is a field journal: one run per role, a tech tree instead of a skills list, and a notebook that keeps the abandoned entries.</p>
+
+      <div style="margin-top: 8px; display: flex; flex-direction: column; border-top: 1px solid #2F4A3A">
+        <a href="#runlog" style="display: grid; grid-template-columns: 48px 1fr auto; align-items: baseline; gap: 16px; padding: 12px 0; border-bottom: 1px solid #C9BFA8">
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #8A561C">01</span>
+          <span style="font-family: 'Fraunces', Georgia, serif; font-size: 22px; font-weight: 500; color: #1F2621">Run log</span>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #2F4A3A">career · one expedition per role</span>
+        </a>
+        <a href="#tree" style="display: grid; grid-template-columns: 48px 1fr auto; align-items: baseline; gap: 16px; padding: 12px 0; border-bottom: 1px solid #C9BFA8">
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #8A561C">02</span>
+          <span style="font-family: 'Fraunces', Georgia, serif; font-size: 22px; font-weight: 500; color: #1F2621">Tech tree</span>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #2F4A3A">skills · where each one unlocked</span>
+        </a>
+        <a href="#notebook" style="display: grid; grid-template-columns: 48px 1fr auto; align-items: baseline; gap: 16px; padding: 12px 0; border-bottom: 1px solid #C9BFA8">
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #8A561C">03</span>
+          <span style="font-family: 'Fraunces', Georgia, serif; font-size: 22px; font-weight: 500; color: #1F2621">Notebook</span>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #2F4A3A">entries · hypothesis, result, abandoned</span>
+        </a>
+        <a href="#projects" style="display: grid; grid-template-columns: 48px 1fr auto; align-items: baseline; gap: 16px; padding: 12px 0; border-bottom: 1px solid #C9BFA8">
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #8A561C">04</span>
+          <span style="font-family: 'Fraunces', Georgia, serif; font-size: 22px; font-weight: 500; color: #1F2621">Projects</span>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #2F4A3A">glmerge · the paper · side quests</span>
+        </a>
+        <a href="#colophon" style="display: grid; grid-template-columns: 48px 1fr auto; align-items: baseline; gap: 16px; padding: 12px 0; border-bottom: 1px solid #2F4A3A">
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #8A561C">05</span>
+          <span style="font-family: 'Fraunces', Georgia, serif; font-size: 22px; font-weight: 500; color: #1F2621">Colophon</span>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #2F4A3A">how this site grows itself</span>
+        </a>
+      </div>
+    </div>
+
+    <div style="grid-column: span 5; display: flex; flex-direction: column; gap: 20px">
+      <figure style="margin: 0; display: flex; flex-direction: column; gap: 10px; padding: 18px 18px 14px 18px; border: 1px solid #2F4A3A; border-radius: 2px; background: #F8F3E8">
+        <svg viewBox="0 0 420 300" width="100%" height="300" role="img" aria-label="A generated plant specimen with branching stems and leaves">
+          <g stroke="#2F4A3A" stroke-opacity="0.14" stroke-width="1">
+            <line x1="0" y1="60" x2="420" y2="60"></line>
+            <line x1="0" y1="120" x2="420" y2="120"></line>
+            <line x1="0" y1="180" x2="420" y2="180"></line>
+            <line x1="0" y1="240" x2="420" y2="240"></line>
+          </g>
+          <line x1="20" y1="290" x2="400" y2="290" stroke="#2F4A3A" stroke-width="1.5"></line>
+          <g fill="none" stroke="#2F4A3A" stroke-width="2.2" stroke-linecap="round">
+            <path d="M210,290 C205,230 215,190 200,140 C190,100 205,70 215,30"></path>
+            <path d="M207,232 C180,222 150,217 125,192"></path>
+            <path d="M212,186 C240,181 270,171 300,141"></path>
+            <path d="M201,140 C175,135 155,120 140,96"></path>
+            <path d="M208,86 C235,81 255,66 268,46"></path>
+            <path d="M203,112 C190,104 182,95 176,84" stroke-width="1.6"></path>
+            <path d="M213,60 C226,56 236,50 242,42" stroke-width="1.6"></path>
+          </g>
+          <g fill="#6E9B5A" fill-opacity="0.92">
+            <ellipse cx="112" cy="180" rx="24" ry="9" transform="rotate(-42 112 180)"></ellipse>
+            <ellipse cx="312" cy="128" rx="24" ry="9" transform="rotate(-48 312 128)"></ellipse>
+            <ellipse cx="130" cy="82" rx="22" ry="8" transform="rotate(-62 130 82)"></ellipse>
+            <ellipse cx="277" cy="34" rx="20" ry="8" transform="rotate(-55 277 34)"></ellipse>
+            <ellipse cx="170" cy="74" rx="14" ry="6" transform="rotate(-60 170 74)"></ellipse>
+            <ellipse cx="248" cy="35" rx="13" ry="5.5" transform="rotate(-40 248 35)"></ellipse>
+            <ellipse cx="160" cy="214" rx="15" ry="6" transform="rotate(-20 160 214)"></ellipse>
+            <ellipse cx="255" cy="176" rx="15" ry="6" transform="rotate(-25 255 176)"></ellipse>
+          </g>
+          <g fill="#2F4A3A" fill-opacity="0.35">
+            <path d="M88,180 L136,180" stroke="#2F4A3A" stroke-width="0.8" transform="rotate(-42 112 180)"></path>
+            <path d="M288,128 L336,128" stroke="#2F4A3A" stroke-width="0.8" transform="rotate(-48 312 128)"></path>
+          </g>
+          <g fill="{{accent}}">
+            <circle cx="207" cy="232" r="3.2"></circle>
+            <circle cx="212" cy="186" r="3.2"></circle>
+            <circle cx="201" cy="140" r="3.2"></circle>
+            <circle cx="208" cy="86" r="3.2"></circle>
+            <circle cx="203" cy="112" r="2.4"></circle>
+            <circle cx="213" cy="60" r="2.4"></circle>
+          </g>
+          <circle cx="215" cy="30" r="7" fill="#E2B04A" stroke="{{accent}}" stroke-width="1.5"></circle>
+          <g font-family="IBM Plex Mono, monospace" font-size="10" fill="#2F4A3A">
+            <text x="22" y="56">n = 7</text>
+            <text x="22" y="116">θ = 34°</text>
+            <text x="22" y="176">depth 4</text>
+            <text x="340" y="284">seed 7f3a</text>
+          </g>
+        </svg>
+        <figcaption style="display: flex; justify-content: space-between; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #2F4A3A">
+          <span>Fig. 1 · specimen grown from today's seed</span>
+          <span style="color: #8A561C">L-system, 4 iterations</span>
+        </figcaption>
+      </figure>
+
+      <div style="display: flex; flex-direction: column; gap: 10px; padding: 16px 18px; border: 1px solid #C9BFA8; border-radius: 2px">
+        <div style="display: flex; justify-content: space-between; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #8A561C">
+          <span>Run 04 · in progress</span>
+          <span>floor 5 of ?</span>
+        </div>
+        <div style="font-family: 'Fraunces', Georgia, serif; font-size: 24px; font-weight: 500; color: #1F2621">Staff Software Engineer, Infrastructure</div>
+        <div style="display: grid; grid-template-columns: 72px 1fr; gap: 4px 12px; font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; line-height: 1.5; color: #2F4A3A">
+          <span style="color: #8A561C">entered</span><span>2021-06</span>
+          <span style="color: #8A561C">items</span><span>Kubernetes · Terraform · Airflow · Claude Code</span>
+          <span style="color: #8A561C">boss</span><span>[the hardest problem of this run, one line]</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 14px; border-top: 1px solid #C9BFA8; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #2F4A3A">
+    <div style="display: flex; gap: 14px; align-items: center">
+      <span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 14px; height: 14px; background: #F3EDE0; border: 1px solid #2F4A3A"></span>paper F3EDE0</span>
+      <span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 14px; height: 14px; background: #1F2621"></span>ink 1F2621</span>
+      <span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 14px; height: 14px; background: #2F4A3A"></span>moss 2F4A3A</span>
+      <span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 14px; height: 14px; background: #6E9B5A"></span>leaf 6E9B5A</span>
+      <span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 14px; height: 14px; background: #B8742A"></span>copper B8742A</span>
+      <span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 14px; height: 14px; background: #E2B04A"></span>sun E2B04A</span>
+    </div>
+    <div>Fraunces · IBM Plex Sans · IBM Plex Mono</div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#B8742A","options":["#B8742A","#8A561C","#C0392B","#2F4A3A"]},"$preview":{"width":1280,"height":820}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { accent: this.props.accent ?? '#B8742A' };
+  }
+}
+</script>
+</body>
+</html>

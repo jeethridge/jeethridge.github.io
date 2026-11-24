@@ -1,0 +1,20 @@
+{
+  "v": 3,
+  "createdOnFiles": {"v": 1, "at": "2026-11-24T19:30:00Z"},
+  "title": "jamesethridge.com Design Directions",
+  "launch": {"view": "canvas"},
+  "pages": [],
+  "boards": {
+    "Main.dc.html": {"x": 0, "y": 0, "w": 1280, "h": 820, "title": "A · Field Journal"},
+    "Greenhouse.dc.html": {"x": 1360, "y": 0, "w": 1280, "h": 820, "title": "B · Terminal Greenhouse"},
+    "Atlas.dc.html": {"x": 2720, "y": 0, "w": 1280, "h": 820, "title": "C · Pixel Atlas"},
+    "Circuit.dc.html": {"x": 0, "y": 1240, "w": 1280, "h": 820, "title": "D · Circuit Greenhouse (Dracula, revised B)"},
+    "Motifs.dc.html": {"x": 1360, "y": 1240, "w": 1280, "h": 560, "title": "D · motif sheet: mark, nodes, divider"}
+  },
+  "order": ["Main.dc.html", "Greenhouse.dc.html", "Atlas.dc.html", "Circuit.dc.html", "Motifs.dc.html"],
+  "notes": {
+    "t1": {"x": 0, "y": -300, "text": "jamesethridge.com · three directions, one home page each", "kind": "title1", "maxW": 4000},
+    "t2": {"x": 0, "y": 940, "text": "Round 2 · B in Dracula with JetBrains Mono, circuit traces that grow into vines", "kind": "title1", "maxW": 2640}
+  },
+  "designSystems": []
+}

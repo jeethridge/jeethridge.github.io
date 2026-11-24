@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Circuit Greenhouse</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&display=swap">
+<style>
+/* Layout: a fixed three-layer canvas background (far, mid, near) behind one translucent terminal panel centered in the viewport. */
+:root{
+  --bg:#282A36; --bg-deep:#1E1F29; --bg-lift:#2E3040;
+  --panel:rgba(33,34,44,0.74); --line:#44475A; --fg:#F8F8F2; --dim:#9AA3C9; --comment:#6272A4;
+  --purple:#BD93F9; --cyan:#8BE9FD; --green:#50FA7B; --orange:#FFB86C; --pink:#FF79C6; --red:#FF5555;
+  --mono:'JetBrains Mono', ui-monospace, 'Cascadia Mono', Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--mono);font-size:14px;line-height:1.55;overflow-x:hidden}
+*:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+
+#bg{position:fixed;inset:0;z-index:0;overflow:hidden;
+  background:
+    radial-gradient(circle at 1px 1px, rgba(68,71,90,0.42) 0.8px, transparent 1px) 0 0 / 28px 28px,
+    radial-gradient(ellipse 70% 60% at 50% 42%, var(--bg-lift) 0%, var(--bg) 58%, var(--bg-deep) 100%);}
+#bg canvas{position:absolute;left:-6%;top:-6%;width:112%;height:112%;will-change:transform}
+.layer-far{filter:blur(3px);opacity:.55}
+.layer-mid{opacity:.95}
+.layer-near{filter:blur(1.6px);opacity:.75}
+
+main{position:relative;z-index:1;min-height:100%;box-sizing:border-box;display:flex;align-items:center;justify-content:center;
+  padding-block:40px;padding-left:max(16px, env(safe-area-inset-left,0px));padding-right:max(16px, env(safe-area-inset-right,0px))}
+.term{width:100%;max-width:1040px;min-width:0;border:1px solid var(--line);border-radius:6px;background:var(--panel);
+  -webkit-backdrop-filter:blur(12px) saturate(1.15);backdrop-filter:blur(12px) saturate(1.15);
+  box-shadow:0 30px 80px rgba(0,0,0,.45), inset 0 1px 0 rgba(248,248,242,.04);overflow:hidden;will-change:transform}
+
+.tabs{display:flex;flex-wrap:wrap;align-items:stretch;background:rgba(33,34,44,.85);border-bottom:1px solid var(--line);font-size:12.5px}
+.tabs a{padding:9px 16px;color:var(--fg);text-decoration:none;background:var(--line);border-right:1px solid var(--bg)}
+.tabs a[aria-current="page"]{background:var(--fg);color:var(--bg);font-weight:500}
+.tabs a:hover{color:var(--cyan)}
+.tabs a[aria-current="page"]:hover{color:var(--bg)}
+.tabs .meta{margin-left:auto;display:flex;flex-wrap:wrap;gap:16px;align-items:center;padding:0 16px;color:var(--dim)}
+.tabs .meta b{color:var(--orange);font-weight:500}
+
+.body{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:32px;padding:32px 36px 24px}
+@media (max-width:860px){.body{grid-template-columns:minmax(0,1fr);gap:22px;padding:24px 20px 20px}}
+.col{display:flex;flex-direction:column;gap:14px;min-width:0}
+.prompt{font-size:13px;color:var(--dim)}
+.prompt .tilde{color:var(--green)}.prompt .chev{color:var(--pink)}
+h1{margin:0;font-size:clamp(34px,5vw,56px);line-height:1;font-weight:700;letter-spacing:-.03em;text-wrap:balance}
+h1 .cursor{color:var(--pink);animation:blink 1.2s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.tag{margin:0;font-style:italic;font-size:clamp(16px,2.2vw,21px);color:var(--cyan)}
+pre{margin:0;padding:14px 16px;border:1px solid var(--line);border-radius:4px;background:rgba(33,34,44,.7);font-family:inherit;font-size:13px;line-height:1.6;overflow-x:auto;min-width:0}
+.k{color:var(--purple)}.ty{color:var(--cyan)}.s{color:var(--green)}.n{color:var(--orange)}.op{color:var(--pink)}.c{color:var(--comment)}
+p.lede{margin:0;max-width:60ch;color:#D8DAE3}
+.nav{display:flex;flex-wrap:wrap;gap:8px}
+.nav a{padding:8px 12px;border:1px solid var(--line);border-radius:4px;color:var(--fg);text-decoration:none;font-size:13px}
+.nav a.primary{border-color:var(--purple);color:var(--purple)}
+.nav a.cv{color:var(--orange)}
+.nav a:hover{border-color:var(--cyan);color:var(--cyan)}
+
+.card{display:flex;flex-direction:column;gap:8px;padding:14px 16px;border:1px solid var(--line);border-radius:4px;background:rgba(33,34,44,.7);min-width:0}
+.card h2{margin:0;font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);display:flex;justify-content:space-between;gap:12px}
+.card h2 .live{color:var(--green)}
+.log{display:grid;grid-template-columns:64px minmax(0,1fr);gap:2px 14px;font-size:12.5px;color:#D8DAE3}
+.log .t{color:var(--dim)}
+
+.meter{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:10px;font-size:11.5px;color:var(--dim)}
+.meter .bar{position:relative;height:6px;border-radius:3px;background:linear-gradient(90deg,var(--purple),var(--cyan),var(--green));opacity:.85}
+.meter .pin{position:absolute;top:-4px;width:2px;height:14px;background:var(--fg);border-radius:1px;transform:translateX(-1px)}
+.meter small{display:block;color:var(--comment);font-size:10.5px}
+
+.foot{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;justify-content:space-between;padding:12px 36px 14px;border-top:1px solid var(--line);font-size:12px;color:var(--dim)}
+@media (max-width:860px){.foot{padding:12px 20px}}
+.foot .seed b{color:var(--orange);font-weight:500}
+.ctl{display:flex;gap:8px;align-items:center}
+button{font:inherit;font-size:12px;padding:5px 10px;border:1px solid var(--line);border-radius:4px;background:transparent;color:var(--fg);cursor:pointer;min-height:32px}
+button:hover{border-color:var(--cyan);color:var(--cyan)}
+button.go{color:var(--green);border-color:rgba(80,250,123,.5)}
+.note{color:var(--comment);font-size:11px}
+@media (prefers-reduced-motion: reduce){h1 .cursor{animation:none}}
+</style>
+
+<div id="bg" aria-hidden="true">
+  <canvas class="layer-far" data-layer="0"></canvas>
+  <canvas class="layer-mid" data-layer="1"></canvas>
+  <canvas class="layer-near" data-layer="2"></canvas>
+</div>
+
+<main>
+  <div class="term" id="term">
+    <nav class="tabs" aria-label="Site sections">
+      <a href="#tab-home" aria-current="page">1 home</a>
+      <a href="#tab-runlog">2 run-log</a>
+      <a href="#tab-tree">3 tech-tree</a>
+      <a href="#tab-notebook">4 notebook</a>
+      <a href="#tab-projects">5 projects</a>
+      <a href="#tab-colophon">6 colophon</a>
+      <div class="meta"><span>jamesethridge.com</span><span>seed <b id="seedTop">…</b></span></div>
+    </nav>
+
+    <div class="body">
+      <div class="col">
+        <div class="prompt"><span class="tilde">~</span> <span class="chev">❯</span> whoami</div>
+        <h1>James Ethridge<span class="cursor">_</span></h1>
+        <p class="tag">infrastructure that grows research.</p>
+<pre><span class="k">let</span> james <span class="op">=</span> <span class="ty">Engineer</span> {
+  role:  <span class="s">"Staff Software Engineer, Infrastructure"</span>,
+  runs:  <span class="n">4</span>,
+  focus: [<span class="s">"platform"</span>, <span class="s">"data"</span>, <span class="s">"ml-infra"</span>],
+  users: <span class="s">"scientists and engineers"</span>,
+  boss:  <span class="k">None</span>,  <span class="c">// run 04 in progress</span>
+};</pre>
+        <p class="lede">I build and run the data, compute, and ML platforms that scientists and engineers work on. Every role here is a run. Every skill is a node with the run it unlocked in. The notebook keeps the abandoned entries.</p>
+        <div class="nav">
+          <a class="primary" href="#tab-runlog">./run-log</a>
+          <a href="#tab-tree">./tech-tree</a>
+          <a href="#tab-notebook">./notebook</a>
+          <a href="#tab-projects">./projects</a>
+          <a class="cv" href="#tab-cv">cv.pdf</a>
+        </div>
+      </div>
+
+      <div class="col">
+        <div class="card">
+          <h2><span>run-log · tail -n 4</span><span class="live">● live</span></h2>
+          <div class="log">
+            <span class="t">2021-06</span><span><span class="k">run 04</span> enter · Staff Software Engineer, Infrastructure</span>
+            <span class="t">floor 3</span><span>developer platform rebuilt · <span class="n">item</span> Skaffold</span>
+            <span class="t">floor 4</span><span><span style="color:var(--red)">abandoned</span> GPU foundation-model R&amp;D · kept in notebook</span>
+            <span class="t">now</span><span>boss: [the hardest problem of this run]<span class="cursor" style="color:var(--pink)">█</span></span>
+          </div>
+        </div>
+        <div class="card">
+          <h2><span>substrate</span><span id="phaseWord">silicon</span></h2>
+          <div class="meter">
+            <span>si<small>trace</small></span>
+            <div class="bar"><div class="pin" id="pin" style="left:20%"></div></div>
+            <span>bio<small>hypha</small></span>
+          </div>
+          <div class="note">The background breathes between circuit and mycelium on a ninety-second cycle. New growth takes the current substrate and morphs along its length.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="foot">
+      <span class="seed">seed <b id="seedBottom">…</b> · <span id="statLine">0 hyphae</span></span>
+      <div class="ctl">
+        <button type="button" class="go" id="regrow">regrow</button>
+        <button type="button" id="pause" aria-pressed="false">pause</button>
+      </div>
+      <span class="note" id="motionNote"></span>
+    </div>
+  </div>
+</main>
+
+<script>
+(function () {
+  'use strict';
+  var TAU = Math.PI * 2;
+  var DPR = Math.min(window.devicePixelRatio || 1, 1.5);
+  var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Seeded pseudo-random numbers: a string hash feeds a 32-bit generator, so one seed replays one garden.
+  function xmur3(str) {
+    var h = 1779033703 ^ str.length;
+    for (var i = 0; i < str.length; i++) {
+      h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
+      h = (h << 13) | (h >>> 19);
+    }
+    return function () {
+      h = Math.imul(h ^ (h >>> 16), 2246822507);
+      h = Math.imul(h ^ (h >>> 13), 3266489909);
+      return (h ^= h >>> 16) >>> 0;
+    };
+  }
+  function mulberry32(a) {
+    return function () {
+      a |= 0; a = (a + 0x6D2B79F5) | 0;
+      var t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function todaySeed() {
+    var d = new Date();
+    return String(d.getFullYear()) + pad(d.getMonth() + 1) + pad(d.getDate());
+  }
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function seedFromHash() {
+    var h = (location.hash || '').slice(1);
+    return /^[A-Za-z0-9._~-]{1,32}$/.test(h) ? h : null;
+  }
+  function randomSeed(rnd) {
+    var s = '';
+    var alphabet = '0123456789abcdef';
+    for (var i = 0; i < 6; i++) s += alphabet[Math.floor(rnd() * 16)];
+    return s;
+  }
+  function clamp01(v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
+  function lerp(a, b, t) { return a + (b - a) * t; }
+  function lerpAngle(a, b, t) {
+    var d = ((b - a + Math.PI) % TAU + TAU) % TAU - Math.PI;
+    return a + d * t;
+  }
+  function snap45(h) { return Math.round(h / (Math.PI / 4)) * (Math.PI / 4); }
+
+  var PURPLE = [189, 147, 249], CYAN = [139, 233, 253], GREEN = [80, 250, 123], PINK = [255, 121, 198], BG = [40, 42, 54];
+  function mix(a, b, t) { return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t]; }
+  function morphColor(o) { return o < 0.5 ? mix(PURPLE, CYAN, o * 2) : mix(CYAN, GREEN, (o - 0.5) * 2); }
+  function rgba(c, a) { return 'rgba(' + (c[0] | 0) + ',' + (c[1] | 0) + ',' + (c[2] | 0) + ',' + a.toFixed(3) + ')'; }
+
+  // Three depth layers. depth = parallax travel in px, fade = seconds a point stays visible, pop = target hypha count.
+  var LAYERS = [
+    { depth: 6,  speed: 0.55, pop: 16, fade: 28, width: 1.1, leaf: 0.75 },
+    { depth: 14, speed: 1.0,  pop: 13, fade: 21, width: 1.6, leaf: 1.0 },
+    { depth: 28, speed: 1.4,  pop: 7,  fade: 15, width: 2.3, leaf: 1.4 }
+  ];
+  var CYCLE = 90; // seconds for one silicon-to-bio-to-silicon breath
+  var MORPH_SECONDS = 38; // how long a hypha takes to cross the whole substrate range
+
+  var canvases = Array.prototype.slice.call(document.querySelectorAll('#bg canvas'));
+  var ctxs = canvases.map(function (c) { return c.getContext('2d'); });
+  var W = 0, H = 0;
+  var seed, rnd, seedPhase;
+  var layersState = [];
+  var paused = false, hidden = false;
+  var lastTs = 0, simTime = 0;
+
+  function resize() {
+    var r = canvases[0].getBoundingClientRect();
+    W = Math.max(1, Math.round(r.width));
+    H = Math.max(1, Math.round(r.height));
+    canvases.forEach(function (c, i) {
+      c.width = Math.round(W * DPR); c.height = Math.round(H * DPR);
+      ctxs[i].setTransform(DPR, 0, 0, DPR, 0, 0);
+      ctxs[i].lineCap = 'round'; ctxs[i].lineJoin = 'round';
+    });
+  }
+
+  function bias(t) { return 0.5 + 0.5 * Math.sin((t / CYCLE) * TAU + seedPhase); }
+  function biasDir(t) { return Math.cos((t / CYCLE) * TAU + seedPhase) >= 0 ? 1 : -1; }
+
+  function spawn(L, now, parent, branchHeading) {
+    var x, y, heading;
+    if (parent) {
+      x = parent.x; y = parent.y; heading = branchHeading;
+    } else {
+      var side = rnd();
+      if (side < 0.5) { x = rnd() * W; y = side < 0.25 ? -8 : H + 8; heading = side < 0.25 ? Math.PI / 2 : -Math.PI / 2; }
+      else { x = side < 0.75 ? -8 : W + 8; y = rnd() * H; heading = side < 0.75 ? 0 : Math.PI; }
+      heading += (rnd() - 0.5) * 0.9;
+    }
+    var o0 = parent ? parent.oNow : clamp01(bias(now) + (rnd() - 0.5) * 0.35);
+    return {
+      x: x, y: y,
+      hOrg: heading, hCir: snap45(heading),
+      pts: [{ x: x, y: y, t: now }],
+      items: [],
+      born: now,
+      o0: o0, oNow: o0,
+      dir: biasDir(now),
+      morph: 0.7 + rnd() * 0.8,
+      speed: (11 + rnd() * 9) * L.speed,
+      phase: rnd() * TAU, freq: 0.25 + rnd() * 0.45, wobble: 0.5 + rnd() * 0.9,
+      runLeft: 20 + rnd() * 70,
+      growing: true,
+      maxPts: parent ? 60 + rnd() * 90 : 160 + rnd() * 200,
+      depth: parent ? parent.depth + 1 : 0,
+      lastLeaf: now
+    };
+  }
+  function organicAt(a, t) {
+    return clamp01(a.o0 + a.dir * ((t - a.born) / MORPH_SECONDS) * a.morph);
+  }
+
+  function step(a, L, S, now, dt) {
+    if (!a.growing) return;
+    var o = organicAt(a, now); a.oNow = o;
+    // Organic heading: a slow sine wander plus jitter. Circuit heading: straight runs with 45° or 90° turns.
+    a.hOrg += Math.sin(now * a.freq + a.phase) * a.wobble * dt + (rnd() - 0.5) * 0.9 * dt;
+    a.hOrg += (a.hCir - a.hOrg) * 0.15 * dt * (1 - o);
+    a.runLeft -= a.speed * dt;
+    if (a.runLeft <= 0) {
+      var turn = (rnd() < 0.5 ? 1 : -1) * (rnd() < 0.7 ? Math.PI / 4 : Math.PI / 2);
+      a.hCir = snap45(a.hOrg + turn);
+      a.runLeft = 24 + rnd() * 90;
+      if (o < 0.55 && rnd() < 0.65) a.items.push({ k: 'via', x: a.x, y: a.y, t: now, o: o });
+    }
+    var h = lerpAngle(a.hCir, a.hOrg, o);
+    var sp = a.speed * (1 - 0.25 * o);
+    a.x += Math.cos(h) * sp * dt; a.y += Math.sin(h) * sp * dt;
+    var last = a.pts[a.pts.length - 1];
+    var dx = a.x - last.x, dy = a.y - last.y;
+    if (dx * dx + dy * dy > 9) a.pts.push({ x: a.x, y: a.y, t: now });
+
+    // Leaves appear once the hypha is more bio than silicon.
+    if (o > 0.6 && now - a.lastLeaf > 1.2 && rnd() < 0.9 * dt) {
+      a.lastLeaf = now;
+      a.items.push({ k: 'leaf', x: a.x, y: a.y, t: now, o: o, ang: h + (rnd() < 0.5 ? 1 : -1) * (0.7 + rnd() * 0.5), size: (5 + rnd() * 6) * L.leaf });
+    }
+    // Branching: circuit branches at right angles, hyphae at shallow angles.
+    if (a.depth < 2 && S.agents.length < L.pop + 6 && rnd() < 0.09 * dt) {
+      var ang = o < 0.5 ? h + (rnd() < 0.5 ? 1 : -1) * Math.PI / 2 : h + (rnd() - 0.5) * 1.4;
+      S.agents.push(spawn(L, now, a, ang));
+    }
+    var out = a.x < -30 || a.x > W + 30 || a.y < -30 || a.y > H + 30;
+    if (out || a.pts.length >= a.maxPts) {
+      a.growing = false;
+      a.items.push({ k: o < 0.5 ? 'pad' : 'bud', x: a.x, y: a.y, t: now, o: o });
+    }
+  }
+
+  function render(ctx, L, S, now) {
+    ctx.clearRect(0, 0, W, H);
+    var CH = 10;
+    for (var n = 0; n < S.agents.length; n++) {
+      var a = S.agents[n];
+      var pts = a.pts;
+      for (var i = 0; i < pts.length - 1; i += CH) {
+        var j = Math.min(i + CH, pts.length - 1);
+        var age = now - pts[j].t;
+        var alpha = clamp01(1 - age / L.fade);
+        if (alpha <= 0.015) continue;
+        var oSeg = organicAt(a, pts[j].t);
+        alpha = alpha * alpha * (3 - 2 * alpha); // smoothstep fade
+        ctx.strokeStyle = rgba(morphColor(oSeg), alpha * 0.85);
+        ctx.lineWidth = L.width * (1.05 - 0.4 * oSeg);
+        ctx.beginPath();
+        ctx.moveTo(pts[i].x, pts[i].y);
+        for (var k = i + 1; k <= j; k++) ctx.lineTo(pts[k].x, pts[k].y);
+        ctx.stroke();
+      }
+      // Growing tip: a small bright point that reads as the living end.
+      if (a.growing) {
+        var tipC = morphColor(a.oNow);
+        ctx.fillStyle = rgba(tipC, 0.9);
+        ctx.beginPath(); ctx.arc(a.x, a.y, L.width * 0.9, 0, TAU); ctx.fill();
+      }
+      for (var m = 0; m < a.items.length; m++) {
+        var it = a.items[m];
+        var ia = clamp01(1 - (now - it.t) / L.fade);
+        if (ia <= 0.015) continue;
+        var c = morphColor(it.o);
+        if (it.k === 'via') {
+          ctx.lineWidth = L.width * 0.9; ctx.strokeStyle = rgba(c, ia * 0.9); ctx.fillStyle = rgba(BG, ia);
+          ctx.beginPath(); ctx.arc(it.x, it.y, L.width * 1.7, 0, TAU); ctx.fill(); ctx.stroke();
+        } else if (it.k === 'pad') {
+          ctx.lineWidth = L.width * 0.9; ctx.strokeStyle = rgba(c, ia * 0.9); ctx.fillStyle = rgba(BG, ia);
+          ctx.beginPath(); ctx.arc(it.x, it.y, L.width * 2.2, 0, TAU); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = rgba(c, ia * 0.6);
+          ctx.beginPath(); ctx.arc(it.x, it.y, L.width * 0.7, 0, TAU); ctx.fill();
+        } else if (it.k === 'bud') {
+          ctx.fillStyle = rgba(PINK, ia * 0.25);
+          ctx.beginPath(); ctx.arc(it.x, it.y, L.width * 3.2, 0, TAU); ctx.fill();
+          ctx.fillStyle = rgba(PINK, ia * 0.9);
+          ctx.beginPath(); ctx.arc(it.x, it.y, L.width * 1.3, 0, TAU); ctx.fill();
+        } else if (it.k === 'leaf') {
+          ctx.save();
+          ctx.translate(it.x, it.y); ctx.rotate(it.ang);
+          ctx.fillStyle = rgba(GREEN, ia * 0.55);
+          ctx.beginPath(); ctx.ellipse(it.size * 0.9, 0, it.size, it.size * 0.38, 0, 0, TAU); ctx.fill();
+          ctx.strokeStyle = rgba(BG, ia * 0.7); ctx.lineWidth = 0.8;
+          ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(it.size * 1.7, 0); ctx.stroke();
+          ctx.restore();
+        }
+      }
+    }
+  }
+
+  function prune(L, S, now) {
+    S.agents = S.agents.filter(function (a) {
+      var lastT = a.pts[a.pts.length - 1].t;
+      var alive = a.growing || now - lastT < L.fade;
+      if (!alive) return false;
+      a.items = a.items.filter(function (it) { return now - it.t < L.fade; });
+      return true;
+    });
+  }
+
+  function reset(newSeed) {
+    seed = newSeed;
+    var hash = xmur3(seed);
+    rnd = mulberry32(hash());
+    seedPhase = rnd() * TAU;
+    simTime = 0;
+    layersState = LAYERS.map(function () { return { agents: [] }; });
+    document.getElementById('seedTop').textContent = seed;
+    document.getElementById('seedBottom').textContent = seed;
+    // Pre-grow so the first frame is not empty.
+    var warm = reduced ? 40 : 18;
+    for (var s = 0; s < warm; s++) tick(0.25, true);
+  }
+
+  function tick(dt, silent) {
+    simTime += dt;
+    var now = simTime;
+    for (var i = 0; i < LAYERS.length; i++) {
+      var L = LAYERS[i], S = layersState[i];
+      var growing = 0;
+      for (var n = 0; n < S.agents.length; n++) { step(S.agents[n], L, S, now, dt); if (S.agents[n].growing) growing++; }
+      if (S.agents.length < L.pop && rnd() < 0.9 * dt + (S.agents.length < L.pop / 2 ? 0.5 : 0)) S.agents.push(spawn(L, now, null, 0));
+      prune(L, S, now);
+      if (!silent) render(ctxs[i], L, S, now);
+    }
+  }
+
+  // Parallax: the pointer tilts the layers by their depth. With no pointer for a while the scene drifts on its own.
+  var target = { x: 0, y: 0 }, cur = { x: 0, y: 0 }, lastPointer = -1e9;
+  var term = document.getElementById('term');
+  window.addEventListener('pointermove', function (e) {
+    target.x = e.clientX / window.innerWidth - 0.5;
+    target.y = e.clientY / window.innerHeight - 0.5;
+    lastPointer = simTime;
+  }, { passive: true });
+  function parallax(now) {
+    if (reduced) return;
+    if (now - lastPointer > 4) { target.x = Math.sin(now * 0.07) * 0.25; target.y = Math.cos(now * 0.05) * 0.2; }
+    cur.x += (target.x - cur.x) * 0.035; cur.y += (target.y - cur.y) * 0.035;
+    for (var i = 0; i < canvases.length; i++) {
+      var d = LAYERS[i].depth;
+      canvases[i].style.transform = 'translate3d(' + (cur.x * d).toFixed(2) + 'px,' + (cur.y * d).toFixed(2) + 'px,0)';
+    }
+    term.style.transform = 'translate3d(' + (-cur.x * 5).toFixed(2) + 'px,' + (-cur.y * 5).toFixed(2) + 'px,0)';
+  }
+
+  var pin = document.getElementById('pin'), phaseWord = document.getElementById('phaseWord'), statLine = document.getElementById('statLine');
+  var lastUi = -1;
+  function ui(now) {
+    if (now - lastUi < 0.25) return;
+    lastUi = now;
+    var b = bias(now);
+    pin.style.left = (b * 100).toFixed(1) + '%';
+    phaseWord.textContent = b < 0.33 ? 'silicon' : b < 0.66 ? (biasDir(now) > 0 ? 'morphing to bio' : 'morphing to silicon') : 'mycelium';
+    var total = 0; layersState.forEach(function (S) { total += S.agents.length; });
+    statLine.textContent = total + ' hyphae · ' + (paused ? 'paused' : 'growing');
+  }
+
+  function frame(ts) {
+    requestAnimationFrame(frame);
+    if (hidden) { lastTs = ts; return; }
+    var dt = lastTs ? Math.min(0.05, (ts - lastTs) / 1000) : 0.016;
+    lastTs = ts;
+    if (!paused && !(reduced && simTime > 12)) tick(dt, false);
+    parallax(simTime);
+    ui(simTime);
+  }
+
+  document.getElementById('regrow').addEventListener('click', function () {
+    var s = randomSeed(Math.random);
+    try { history.replaceState(null, '', '#' + s); } catch (e) {}
+    resize(); reset(s);
+    for (var i = 0; i < LAYERS.length; i++) render(ctxs[i], LAYERS[i], layersState[i], simTime);
+  });
+  var pauseBtn = document.getElementById('pause');
+  pauseBtn.addEventListener('click', function () {
+    paused = !paused;
+    pauseBtn.textContent = paused ? 'resume' : 'pause';
+    pauseBtn.setAttribute('aria-pressed', paused ? 'true' : 'false');
+  });
+  document.addEventListener('visibilitychange', function () { hidden = document.hidden; });
+  var resizeTimer;
+  window.addEventListener('resize', function () {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function () { resize(); }, 120);
+  });
+  if (reduced) document.getElementById('motionNote').textContent = 'reduced motion: the garden grows for twelve seconds, then holds still';
+
+  resize();
+  reset(seedFromHash() || todaySeed());
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

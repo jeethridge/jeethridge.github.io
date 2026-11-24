@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Direction D: Circuit Greenhouse home page in Dracula</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400;1,500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#8BE9FD;text-decoration:none}a:hover{color:#FF79C6}
+</style>
+</helmet>
+<div style="width: 1280px; height: 820px; box-sizing: border-box; padding: 0 0 32px 0; display: flex; flex-direction: column; gap: 0; background: #282A36; color: #F8F8F2; font-family: 'JetBrains Mono', ui-monospace, monospace; position: relative; overflow: hidden">
+
+  <div style="display: flex; align-items: stretch; background: #21222C; border-bottom: 1px solid #44475A; font-size: 12.5px">
+    <a href="#home" style="padding: 10px 18px; background: #F8F8F2; color: #282A36; font-weight: 500">1 home</a>
+    <a href="#runlog" style="padding: 10px 18px; background: #44475A; color: #F8F8F2">2 run-log</a>
+    <a href="#tree" style="padding: 10px 18px; background: #44475A; color: #F8F8F2; border-left: 1px solid #282A36">3 tech-tree</a>
+    <a href="#notebook" style="padding: 10px 18px; background: #44475A; color: #F8F8F2; border-left: 1px solid #282A36">4 notebook</a>
+    <a href="#projects" style="padding: 10px 18px; background: #44475A; color: #F8F8F2; border-left: 1px solid #282A36">5 projects</a>
+    <a href="#colophon" style="padding: 10px 18px; background: #44475A; color: #F8F8F2; border-left: 1px solid #282A36">6 colophon</a>
+    <div style="flex-grow: 1"></div>
+    <div style="display: flex; gap: 20px; align-items: center; padding: 0 22px; color: #9AA3C9">
+      <span>jamesethridge.com</span>
+      <span>seed <span style="color: #FFB86C">7f3a</span></span>
+      <span>2026-11-24</span>
+      <a href="#regrow" style="color: #50FA7B">regrow</a>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 36px; flex-grow: 1; padding: 40px 56px 0 56px">
+
+    <div style="grid-column: span 7; display: flex; flex-direction: column; gap: 18px">
+      <div style="font-size: 13px; color: #9AA3C9"><span style="color: #50FA7B">~</span> <span style="color: #FF79C6">❯</span> whoami</div>
+      <h1 style="margin: 0; font-size: 64px; line-height: 1.0; font-weight: 700; letter-spacing: -0.03em; color: #F8F8F2">James Ethridge<span style="color: {{accent}}">_</span></h1>
+      <p style="margin: 0; font-style: italic; font-size: 22px; line-height: 1.3; font-weight: 400; color: #8BE9FD">infrastructure that grows research.</p>
+
+      <pre style="margin: 6px 0 0 0; padding: 18px 20px; border: 1px solid #44475A; border-radius: 4px; background: #21222C; font-family: inherit; font-size: 13.5px; line-height: 1.6; color: #F8F8F2; white-space: pre"><span style="color: #BD93F9">let</span> james <span style="color: #FF79C6">=</span> <span style="color: #8BE9FD">Engineer</span> {
+  role:  <span style="color: #50FA7B">"Staff Software Engineer, Infrastructure"</span>,
+  runs:  <span style="color: #FFB86C">4</span>,
+  focus: [<span style="color: #50FA7B">"platform"</span>, <span style="color: #50FA7B">"data"</span>, <span style="color: #50FA7B">"ml-infra"</span>],
+  users: <span style="color: #50FA7B">"scientists and engineers"</span>,
+  boss:  <span style="color: #BD93F9">None</span>,  <span style="color: #6272A4">// run 04 in progress</span>
+};</pre>
+
+      <p style="margin: 0; max-width: 560px; font-size: 14px; line-height: 1.65; color: #D8DAE3">I build and run the data, compute, and ML platforms that scientists and engineers work on. Every role here is a run. Every skill is a node with the run it unlocked in. The notebook keeps the abandoned entries.</p>
+
+      <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 2px">
+        <a href="#runlog" style="padding: 9px 14px; border: 1px solid #BD93F9; border-radius: 4px; font-size: 13px; color: #BD93F9">./run-log</a>
+        <a href="#tree" style="padding: 9px 14px; border: 1px solid #44475A; border-radius: 4px; font-size: 13px">./tech-tree</a>
+        <a href="#notebook" style="padding: 9px 14px; border: 1px solid #44475A; border-radius: 4px; font-size: 13px">./notebook</a>
+        <a href="#projects" style="padding: 9px 14px; border: 1px solid #44475A; border-radius: 4px; font-size: 13px">./projects</a>
+        <a href="#cv" style="padding: 9px 14px; border: 1px solid #44475A; border-radius: 4px; font-size: 13px; color: #FFB86C">cv.pdf</a>
+      </div>
+    </div>
+
+    <div style="grid-column: span 5; display: flex; flex-direction: column; gap: 16px">
+      <figure style="margin: 0; display: flex; flex-direction: column; gap: 10px; padding: 14px 16px 12px 16px; border: 1px solid #44475A; border-radius: 4px; background: #21222C">
+        <svg viewBox="0 0 480 300" width="100%" height="300" role="img" aria-label="Circuit traces leaving a chip and turning into vines with leaves">
+          <defs>
+            <pattern id="dots" width="16" height="16" patternUnits="userSpaceOnUse">
+              <circle cx="1" cy="1" r="0.9" fill="#44475A"></circle>
+            </pattern>
+          </defs>
+          <rect x="0" y="0" width="480" height="300" fill="url(#dots)"></rect>
+
+          <rect x="18" y="110" width="72" height="84" rx="4" fill="#282A36" stroke="#6272A4" stroke-width="1.5"></rect>
+          <text x="54" y="146" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#9AA3C9">JE·01</text>
+          <text x="54" y="160" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="8" fill="#6272A4">seed 7f3a</text>
+          <circle cx="28" cy="120" r="2" fill="#6272A4"></circle>
+
+          <g fill="none" stroke="#BD93F9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="90,124 142,124 166,100 232,100"></polyline>
+            <polyline points="90,144 160,144 182,166 240,166"></polyline>
+            <polyline points="90,164 128,164 128,214 190,214 206,230"></polyline>
+            <polyline points="90,184 112,184 112,262 170,262"></polyline>
+          </g>
+          <g fill="#282A36" stroke="#BD93F9" stroke-width="2">
+            <circle cx="232" cy="100" r="4.5"></circle>
+            <circle cx="240" cy="166" r="4.5"></circle>
+            <circle cx="206" cy="230" r="4.5"></circle>
+            <circle cx="170" cy="262" r="4.5"></circle>
+            <circle cx="128" cy="214" r="3"></circle>
+            <circle cx="112" cy="262" r="3"></circle>
+          </g>
+
+          <g fill="none" stroke="#8BE9FD" stroke-width="2" stroke-linecap="round">
+            <path d="M236,100 C268,100 284,84 302,74"></path>
+            <path d="M244,166 C274,166 290,156 312,160"></path>
+            <path d="M210,230 C240,232 256,246 274,258"></path>
+            <path d="M174,262 C204,262 222,272 244,280"></path>
+          </g>
+          <g fill="none" stroke="#50FA7B" stroke-width="2" stroke-linecap="round">
+            <path d="M302,74 C330,60 364,66 392,46 C410,34 426,30 446,22"></path>
+            <path d="M312,160 C340,166 360,186 392,180 C416,176 432,186 452,178"></path>
+            <path d="M274,258 C296,272 322,266 344,278 C364,290 390,284 410,290"></path>
+            <path d="M244,280 C268,288 290,280 310,290"></path>
+            <path d="M364,66 C370,50 380,44 390,40" stroke-width="1.5"></path>
+            <path d="M360,186 C356,202 346,210 338,214" stroke-width="1.5"></path>
+          </g>
+          <g fill="#50FA7B" fill-opacity="0.9">
+            <ellipse cx="452" cy="20" rx="20" ry="7" transform="rotate(-28 452 20)"></ellipse>
+            <ellipse cx="392" cy="38" rx="13" ry="5" transform="rotate(-60 392 38)"></ellipse>
+            <ellipse cx="458" cy="176" rx="18" ry="7" transform="rotate(-18 458 176)"></ellipse>
+            <ellipse cx="336" cy="216" rx="12" ry="5" transform="rotate(60 336 216)"></ellipse>
+            <ellipse cx="416" cy="290" rx="18" ry="7" transform="rotate(14 416 290)"></ellipse>
+            <ellipse cx="318" cy="292" rx="12" ry="5" transform="rotate(26 318 292)"></ellipse>
+          </g>
+          <g stroke="#282A36" stroke-width="1" stroke-opacity="0.8">
+            <line x1="436" y1="28" x2="468" y2="12"></line>
+            <line x1="442" y1="181" x2="474" y2="171"></line>
+            <line x1="400" y1="286" x2="432" y2="294"></line>
+          </g>
+          <g fill="#282A36" stroke="#8BE9FD" stroke-width="1.6">
+            <circle cx="302" cy="74" r="3.2"></circle>
+            <circle cx="312" cy="160" r="3.2"></circle>
+            <circle cx="274" cy="258" r="3.2"></circle>
+            <circle cx="244" cy="280" r="3.2"></circle>
+          </g>
+          <circle cx="392" cy="180" r="4" fill="#FF79C6"></circle>
+          <circle cx="344" cy="278" r="3.2" fill="#FF79C6"></circle>
+
+          <g font-family="JetBrains Mono, monospace" font-size="9" fill="#9AA3C9">
+            <text x="100" y="292">trace</text>
+            <text x="200" y="292">via</text>
+            <text x="262" y="60">tendril</text>
+            <text x="436" y="60">leaf</text>
+          </g>
+        </svg>
+        <figcaption style="display: flex; justify-content: space-between; font-size: 11.5px; color: #9AA3C9">
+          <span>fig. 1 · trace to vine, grown from today's seed</span>
+          <span style="color: #BD93F9">4 nets · 6 leaves</span>
+        </figcaption>
+      </figure>
+
+      <div style="display: flex; flex-direction: column; gap: 8px; padding: 14px 16px; border: 1px solid #44475A; border-radius: 4px; background: #21222C; font-size: 12.5px; line-height: 1.6">
+        <div style="display: flex; justify-content: space-between; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: #9AA3C9">
+          <span>run-log · tail -n 4</span>
+          <span style="color: #50FA7B">● live</span>
+        </div>
+        <div style="display: grid; grid-template-columns: 64px 1fr; gap: 2px 14px; color: #D8DAE3">
+          <span style="color: #9AA3C9">2021-06</span><span><span style="color: #BD93F9">run 04</span> enter · Staff Software Engineer, Infrastructure</span>
+          <span style="color: #9AA3C9">floor 3</span><span>developer platform rebuilt · <span style="color: #FFB86C">item</span> Skaffold</span>
+          <span style="color: #9AA3C9">floor 4</span><span><span style="color: #FF5555">abandoned</span> GPU foundation-model R&amp;D · kept in notebook</span>
+          <span style="color: #9AA3C9">now</span><span>boss: [the hardest problem of this run]<span style="color: {{accent}}">█</span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: flex; justify-content: space-between; align-items: center; margin: 0 56px; padding-top: 14px; border-top: 1px solid #44475A; font-size: 11px; color: #9AA3C9">
+    <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap">
+      <span style="display: inline-flex; align-items: center; gap: 5px"><span style="width: 13px; height: 13px; background: #282A36; border: 1px solid #44475A"></span>bg</span>
+      <span style="display: inline-flex; align-items: center; gap: 5px"><span style="width: 13px; height: 13px; background: #21222C; border: 1px solid #44475A"></span>panel</span>
+      <span style="display: inline-flex; align-items: center; gap: 5px"><span style="width: 13px; height: 13px; background: #44475A"></span>line</span>
+      <span style="display: inline-flex; align-items: center; gap: 5px"><span style="width: 13px; height: 13px; background: #F8F8F2"></span>fg</span>
+      <span style="display: inline-flex; align-items: center; gap: 5px"><span style="width: 13px; height: 13px; background: #BD93F9"></span>purple · nav, keywords, trace</span>
+      <span style="display: inline-flex; align-items: center; gap: 5px"><span style="width: 13px; height: 13px; background: #8BE9FD"></span>cyan · links, italics, tendril</span>
+      <span style="display: inline-flex; align-items: center; gap: 5px"><span style="width: 13px; height: 13px; background: #50FA7B"></span>green · alive, leaf</span>
+      <span style="display: inline-flex; align-items: center; gap: 5px"><span style="width: 13px; height: 13px; background: #FFB86C"></span>orange · numbers, seed</span>
+      <span style="display: inline-flex; align-items: center; gap: 5px"><span style="width: 13px; height: 13px; background: #FF79C6"></span>pink · cursor, bud</span>
+      <span style="display: inline-flex; align-items: center; gap: 5px"><span style="width: 13px; height: 13px; background: #FF5555"></span>red · abandoned</span>
+    </div>
+    <div>JetBrains Mono · Dracula</div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#FF79C6","options":["#FF79C6","#50FA7B","#BD93F9","#FFB86C"]},"$preview":{"width":1280,"height":820}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { accent: this.props.accent ?? '#FF79C6' };
+  }
+}
+</script>
+</body>
+</html>
