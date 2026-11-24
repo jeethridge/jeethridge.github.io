@@ -1,0 +1,507 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Substrate Network</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&display=swap">
+<style>
+/* Layout: four depth layers of canvas (substrate field plus a growing hyphal network) behind one translucent terminal panel. */
+:root{
+  --bg:#282A36; --bg-deep:#17181F; --bg-lift:#2E3040;
+  --panel:rgba(33,34,44,0.74); --line:#44475A; --fg:#F8F8F2; --dim:#9AA3C9; --comment:#6272A4;
+  --purple:#BD93F9; --cyan:#8BE9FD; --green:#50FA7B; --orange:#FFB86C; --pink:#FF79C6; --red:#FF5555;
+  --mono:'JetBrains Mono', ui-monospace, 'Cascadia Mono', Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--mono);font-size:14px;line-height:1.55;overflow-x:hidden}
+*:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+
+#bg{position:fixed;inset:0;z-index:0;overflow:hidden;
+  background:
+    radial-gradient(circle at 1px 1px, rgba(68,71,90,0.36) 0.8px, transparent 1px) 0 0 / 28px 28px,
+    radial-gradient(ellipse 72% 62% at 50% 44%, var(--bg-lift) 0%, var(--bg) 50%, var(--bg-deep) 100%);}
+.layer{position:absolute;left:-6%;top:-6%;width:112%;height:112%;will-change:transform}
+.layer canvas{position:absolute;inset:0;width:100%;height:100%;transition:opacity 1.6s ease}
+.layer canvas.fading{transition:opacity 14s ease-in;opacity:0}
+.l0{filter:blur(4.5px);opacity:.55}
+.l1{filter:blur(1.6px);opacity:.8}
+.l2{opacity:1}
+.l3{filter:blur(3.6px);opacity:.8}
+
+main{position:relative;z-index:1;min-height:100%;box-sizing:border-box;display:flex;align-items:center;justify-content:center;
+  padding-block:40px;padding-left:max(16px, env(safe-area-inset-left,0px));padding-right:max(16px, env(safe-area-inset-right,0px))}
+.term{width:100%;max-width:1040px;min-width:0;border:1px solid var(--line);border-radius:6px;background:var(--panel);
+  -webkit-backdrop-filter:blur(12px) saturate(1.15);backdrop-filter:blur(12px) saturate(1.15);
+  box-shadow:0 30px 80px rgba(0,0,0,.5), inset 0 1px 0 rgba(248,248,242,.04);overflow:hidden;will-change:transform}
+
+.tabs{display:flex;flex-wrap:wrap;align-items:stretch;background:rgba(33,34,44,.85);border-bottom:1px solid var(--line);font-size:12.5px}
+.tabs a{padding:9px 16px;color:var(--fg);text-decoration:none;background:var(--line);border-right:1px solid var(--bg)}
+.tabs a[aria-current="page"]{background:var(--fg);color:var(--bg);font-weight:500}
+.tabs a:hover{color:var(--cyan)}
+.tabs a[aria-current="page"]:hover{color:var(--bg)}
+.tabs .meta{margin-left:auto;display:flex;flex-wrap:wrap;gap:16px;align-items:center;padding:0 16px;color:var(--dim)}
+.tabs .meta b{color:var(--orange);font-weight:500}
+
+.body{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:32px;padding:32px 36px 24px}
+@media (max-width:860px){.body{grid-template-columns:minmax(0,1fr);gap:22px;padding:24px 20px 20px}}
+.col{display:flex;flex-direction:column;gap:14px;min-width:0}
+.prompt{font-size:13px;color:var(--dim)}
+.prompt .tilde{color:var(--green)}.prompt .chev{color:var(--pink)}
+h1{margin:0;font-size:clamp(34px,5vw,56px);line-height:1;font-weight:700;letter-spacing:-.03em;text-wrap:balance}
+h1 .cursor{color:var(--pink);animation:blink 1.2s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.tag{margin:0;font-style:italic;font-size:clamp(16px,2.2vw,21px);color:var(--cyan)}
+pre{margin:0;padding:14px 16px;border:1px solid var(--line);border-radius:4px;background:rgba(33,34,44,.7);font-family:inherit;font-size:13px;line-height:1.6;overflow-x:auto;min-width:0}
+.k{color:var(--purple)}.ty{color:var(--cyan)}.s{color:var(--green)}.n{color:var(--orange)}.op{color:var(--pink)}.c{color:var(--comment)}
+p.lede{margin:0;max-width:60ch;color:#D8DAE3}
+.nav{display:flex;flex-wrap:wrap;gap:8px}
+.nav a{padding:8px 12px;border:1px solid var(--line);border-radius:4px;color:var(--fg);text-decoration:none;font-size:13px}
+.nav a.primary{border-color:var(--purple);color:var(--purple)}
+.nav a.cv{color:var(--orange)}
+.nav a:hover{border-color:var(--cyan);color:var(--cyan)}
+
+.card{display:flex;flex-direction:column;gap:8px;padding:14px 16px;border:1px solid var(--line);border-radius:4px;background:rgba(33,34,44,.7);min-width:0}
+.card h2{margin:0;font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);display:flex;justify-content:space-between;gap:12px}
+.card h2 .live{color:var(--green)}
+.log{display:grid;grid-template-columns:64px minmax(0,1fr);gap:2px 14px;font-size:12.5px;color:#D8DAE3}
+.log .t{color:var(--dim)}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;font-size:11.5px;color:var(--dim)}
+.stats b{display:block;font-size:18px;font-weight:500;color:var(--fg);font-variant-numeric:tabular-nums}
+.note{color:var(--comment);font-size:11px}
+
+.foot{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;justify-content:space-between;padding:12px 36px 14px;border-top:1px solid var(--line);font-size:12px;color:var(--dim)}
+@media (max-width:860px){.foot{padding:12px 20px}}
+.foot .seed b{color:var(--orange);font-weight:500}
+.ctl{display:flex;gap:8px;align-items:center}
+button{font:inherit;font-size:12px;padding:5px 10px;border:1px solid var(--line);border-radius:4px;background:transparent;color:var(--fg);cursor:pointer;min-height:32px}
+button:hover{border-color:var(--cyan);color:var(--cyan)}
+button.go{color:var(--green);border-color:rgba(80,250,123,.5)}
+@media (prefers-reduced-motion: reduce){h1 .cursor{animation:none}.layer canvas{transition:none}}
+</style>
+
+<div id="bg" aria-hidden="true">
+  <div class="layer l0" data-layer="0"><canvas class="net"></canvas><canvas class="tips"></canvas></div>
+  <div class="layer l1" data-layer="1"><canvas class="net"></canvas><canvas class="tips"></canvas></div>
+  <div class="layer l2" data-layer="2"><canvas class="net"></canvas><canvas class="tips"></canvas></div>
+  <div class="layer l3" data-layer="3"><canvas class="net"></canvas><canvas class="tips"></canvas></div>
+</div>
+
+<main>
+  <div class="term" id="term">
+    <nav class="tabs" aria-label="Site sections">
+      <a href="#tab-home" aria-current="page">1 home</a>
+      <a href="#tab-runlog">2 run-log</a>
+      <a href="#tab-tree">3 tech-tree</a>
+      <a href="#tab-notebook">4 notebook</a>
+      <a href="#tab-projects">5 projects</a>
+      <a href="#tab-colophon">6 colophon</a>
+      <div class="meta"><span>jamesethridge.com</span><span>seed <b id="seedTop">…</b></span></div>
+    </nav>
+
+    <div class="body">
+      <div class="col">
+        <div class="prompt"><span class="tilde">~</span> <span class="chev">❯</span> whoami</div>
+        <h1>James Ethridge<span class="cursor">_</span></h1>
+        <p class="tag">infrastructure that grows research.</p>
+<pre><span class="k">let</span> james <span class="op">=</span> <span class="ty">Engineer</span> {
+  role:  <span class="s">"Staff Software Engineer, Infrastructure"</span>,
+  runs:  <span class="n">4</span>,
+  focus: [<span class="s">"platform"</span>, <span class="s">"data"</span>, <span class="s">"ml-infra"</span>],
+  users: <span class="s">"scientists and engineers"</span>,
+  boss:  <span class="k">None</span>,  <span class="c">// run 04 in progress</span>
+};</pre>
+        <p class="lede">I build and run the data, compute, and ML platforms that scientists and engineers work on. Every role here is a run. Every skill is a node with the run it unlocked in. The notebook keeps the abandoned entries.</p>
+        <div class="nav">
+          <a class="primary" href="#tab-runlog">./run-log</a>
+          <a href="#tab-tree">./tech-tree</a>
+          <a href="#tab-notebook">./notebook</a>
+          <a href="#tab-projects">./projects</a>
+          <a class="cv" href="#tab-cv">cv.pdf</a>
+        </div>
+      </div>
+
+      <div class="col">
+        <div class="card">
+          <h2><span>run-log · tail -n 4</span><span class="live">● live</span></h2>
+          <div class="log">
+            <span class="t">2021-06</span><span><span class="k">run 04</span> enter · Staff Software Engineer, Infrastructure</span>
+            <span class="t">floor 3</span><span>developer platform rebuilt · <span class="n">item</span> Skaffold</span>
+            <span class="t">floor 4</span><span><span style="color:var(--red)">abandoned</span> GPU foundation-model R&amp;D · kept in notebook</span>
+            <span class="t">now</span><span>boss: [the hardest problem of this run]<span class="cursor" style="color:var(--pink)">█</span></span>
+          </div>
+        </div>
+        <div class="card">
+          <h2><span>substrate network</span><span id="phaseWord">growing</span></h2>
+          <div class="stats">
+            <span>generation<b id="genN">1</b></span>
+            <span>live tips<b id="tipN">0</b></span>
+            <span>fusions<b id="joinN">0</b></span>
+          </div>
+          <div class="note">Hyphae enter from the edges and follow the nutrient gradient of a seeded 3-D field. Sparse ground grows as circuit traces, rich ground grows organic. Tips that meet another strand fuse. When the field is spent, the network fades and a new one grows.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="foot">
+      <span class="seed">seed <b id="seedBottom">…</b> · <span id="statLine">…</span></span>
+      <div class="ctl">
+        <button type="button" class="go" id="regrow">regrow</button>
+        <button type="button" id="pause" aria-pressed="false">pause</button>
+      </div>
+      <span class="note" id="motionNote"></span>
+    </div>
+  </div>
+</main>
+
+<script>
+(function () {
+  'use strict';
+  var TAU = Math.PI * 2;
+  var DPR = Math.min(window.devicePixelRatio || 1, 1.5);
+  var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // ---- seeded randomness -------------------------------------------------
+  function xmur3(str) {
+    var h = 1779033703 ^ str.length;
+    for (var i = 0; i < str.length; i++) { h = Math.imul(h ^ str.charCodeAt(i), 3432918353); h = (h << 13) | (h >>> 19); }
+    return function () { h = Math.imul(h ^ (h >>> 16), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909); return (h ^= h >>> 16) >>> 0; };
+  }
+  function mulberry32(a) {
+    return function () { a |= 0; a = (a + 0x6D2B79F5) | 0; var t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  }
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function todaySeed() { var d = new Date(); return String(d.getFullYear()) + pad(d.getMonth() + 1) + pad(d.getDate()); }
+  function seedFromHash() { var h = (location.hash || '').slice(1); return /^[A-Za-z0-9._~-]{1,32}$/.test(h) ? h : null; }
+  function randomSeed() { var s = ''; for (var i = 0; i < 6; i++) s += '0123456789abcdef'[Math.floor(Math.random() * 16)]; return s; }
+
+  // 3-D value noise with three octaves. The permutation comes from the seed, so the field replays.
+  function makeNoise(rnd) {
+    var p = [], perm = new Uint8Array(512), i, j, t;
+    for (i = 0; i < 256; i++) p[i] = i;
+    for (i = 255; i > 0; i--) { j = Math.floor(rnd() * (i + 1)); t = p[i]; p[i] = p[j]; p[j] = t; }
+    for (i = 0; i < 512; i++) perm[i] = p[i & 255];
+    function lat(ix, iy, iz) { return perm[(perm[(perm[ix & 255] + iy) & 255] + iz) & 255] / 255; }
+    function sm(v) { return v * v * (3 - 2 * v); }
+    function n3(x, y, z) {
+      var ix = Math.floor(x), iy = Math.floor(y), iz = Math.floor(z);
+      var fx = sm(x - ix), fy = sm(y - iy), fz = sm(z - iz);
+      var c00 = lat(ix, iy, iz) + (lat(ix + 1, iy, iz) - lat(ix, iy, iz)) * fx;
+      var c10 = lat(ix, iy + 1, iz) + (lat(ix + 1, iy + 1, iz) - lat(ix, iy + 1, iz)) * fx;
+      var c01 = lat(ix, iy, iz + 1) + (lat(ix + 1, iy, iz + 1) - lat(ix, iy, iz + 1)) * fx;
+      var c11 = lat(ix, iy + 1, iz + 1) + (lat(ix + 1, iy + 1, iz + 1) - lat(ix, iy + 1, iz + 1)) * fx;
+      var c0 = c00 + (c10 - c00) * fy, c1 = c01 + (c11 - c01) * fy;
+      return c0 + (c1 - c0) * fz;
+    }
+    return function (x, y, z) { return n3(x, y, z) * 0.5 + n3(x * 2.1 + 7.3, y * 2.1 + 3.1, z * 2.1) * 0.3 + n3(x * 4.3 + 11.7, y * 4.3 + 5.9, z * 4.3) * 0.2; };
+  }
+
+  function clamp01(v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
+  function smooth(a, b, v) { var t = clamp01((v - a) / (b - a)); return t * t * (3 - 2 * t); }
+  function angDiff(to, from) { return ((to - from + Math.PI) % TAU + TAU) % TAU - Math.PI; }
+  function lerpAngle(a, b, t) { return a + angDiff(b, a) * t; }
+  function snap45(h) { return Math.round(h / (Math.PI / 4)) * (Math.PI / 4); }
+
+  var PURPLE = [189, 147, 249], CYAN = [139, 233, 253], GREEN = [80, 250, 123], PINK = [255, 121, 198], BG = [40, 42, 54], LINE = [68, 71, 90];
+  function mix(a, b, t) { return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t]; }
+  function morphColor(o) { return o < 0.5 ? mix(PURPLE, CYAN, o * 2) : mix(CYAN, GREEN, (o - 0.5) * 2); }
+  function rgba(c, a) { return 'rgba(' + (c[0] | 0) + ',' + (c[1] | 0) + ',' + (c[2] | 0) + ',' + a.toFixed(3) + ')'; }
+
+  // ---- tunables ------------------------------------------------------------
+  // z: depth sampled in the noise field. depth: parallax travel in px. width: stroke px. tips: max live tips. seeds: edge entry points.
+  var LAYERS = [
+    { z: 0.0, depth: 5,  width: 0.9, speed: 0.65, tips: 10, seeds: 2 },
+    { z: 0.8, depth: 12, width: 1.3, speed: 0.85, tips: 14, seeds: 3 },
+    { z: 1.6, depth: 22, width: 1.8, speed: 1.0,  tips: 18, seeds: 3 },
+    { z: 2.4, depth: 42, width: 2.8, speed: 1.2,  tips: 8,  seeds: 2 }
+  ];
+  var CELL = 8;             // px per field cell
+  var NOISE_SCALE = 0.0032; // field feature size (smaller = larger features)
+  var BASE_SPEED = 16;      // px per second at layer speed 1 and mid density
+  var GROW_LIMIT = 80;      // seconds before a generation is forced to finish
+  var HOLD = 7;             // seconds to hold the finished network
+  var FADE = 14;            // seconds for the fade-out (matches the CSS transition)
+  var STARVE = 0.07;        // density below which a tip starves
+
+  // ---- state -----------------------------------------------------------------
+  var layerEls = Array.prototype.slice.call(document.querySelectorAll('#bg .layer'));
+  var W = 0, H = 0, seed = '', gen = 1, rnd, noise;
+  var layers = [];
+  var phase = 'grow', phaseT = 0, simTime = 0, lastTs = 0, paused = false, hidden = false, joins = 0;
+
+  function resize() {
+    var r = layerEls[0].getBoundingClientRect();
+    W = Math.max(1, Math.round(r.width)); H = Math.max(1, Math.round(r.height));
+    layerEls.forEach(function (el, i) {
+      var net = el.querySelector('.net'), tips = el.querySelector('.tips');
+      [net, tips].forEach(function (c) { c.width = Math.round(W * DPR); c.height = Math.round(H * DPR); });
+      var S = layers[i];
+      if (S) {
+        S.ctx = net.getContext('2d'); S.tctx = tips.getContext('2d');
+        [S.ctx, S.tctx].forEach(function (c) { c.setTransform(DPR, 0, 0, DPR, 0, 0); c.lineCap = 'round'; c.lineJoin = 'round'; });
+      }
+    });
+  }
+
+  // ---- the field -------------------------------------------------------------
+  function buildField(S, L) {
+    S.gw = Math.ceil(W / CELL) + 2; S.gh = Math.ceil(H / CELL) + 2;
+    S.n = new Float32Array(S.gw * S.gh);
+    S.dep = new Float32Array(S.gw * S.gh);
+    var hot = [], k = 2 + Math.floor(rnd() * 2), m = Math.min(W, H);
+    for (var i = 0; i < k; i++) hot.push({ x: (0.15 + rnd() * 0.7) * W, y: (0.15 + rnd() * 0.7) * H, s: (0.16 + rnd() * 0.14) * m, a: 0.7 + rnd() * 0.5 });
+    var zoff = L.z + gen * 0.61;
+    var lo = 1e9, hi = -1e9, gx, gy, x, y, v, h, d2;
+    for (gy = 0; gy < S.gh; gy++) for (gx = 0; gx < S.gw; gx++) {
+      x = gx * CELL; y = gy * CELL;
+      v = noise(x * NOISE_SCALE, y * NOISE_SCALE, zoff) * 0.6;
+      for (h = 0; h < hot.length; h++) { d2 = (x - hot[h].x) * (x - hot[h].x) + (y - hot[h].y) * (y - hot[h].y); v += hot[h].a * Math.exp(-d2 / (2 * hot[h].s * hot[h].s)) * 0.5; }
+      S.n[gy * S.gw + gx] = v; if (v < lo) lo = v; if (v > hi) hi = v;
+    }
+    for (i = 0; i < S.n.length; i++) S.n[i] = Math.pow((S.n[i] - lo) / (hi - lo + 1e-6), 1.15);
+    S.hash = {};
+    S.tips = [];
+    S.seedPts = [];
+  }
+  function sample(S, x, y) {
+    var fx = x / CELL, fy = y / CELL, gx = Math.floor(fx), gy = Math.floor(fy);
+    if (gx < 0 || gy < 0 || gx >= S.gw - 1 || gy >= S.gh - 1) return 0;
+    var tx = fx - gx, ty = fy - gy, i = gy * S.gw + gx;
+    function v(k) { return S.n[k] - S.dep[k]; }
+    var a = v(i) + (v(i + 1) - v(i)) * tx, b = v(i + S.gw) + (v(i + S.gw + 1) - v(i + S.gw)) * tx;
+    return clamp01(a + (b - a) * ty);
+  }
+  function grad(S, x, y) {
+    var e = CELL * 1.5;
+    return { x: (sample(S, x + e, y) - sample(S, x - e, y)) / (2 * e), y: (sample(S, x, y + e) - sample(S, x, y - e)) / (2 * e) };
+  }
+  function deplete(S, x, y, amt) {
+    var gx = Math.round(x / CELL), gy = Math.round(y / CELL);
+    for (var dy = -1; dy <= 1; dy++) for (var dx = -1; dx <= 1; dx++) {
+      var cx = gx + dx, cy = gy + dy;
+      if (cx < 0 || cy < 0 || cx >= S.gw || cy >= S.gh) continue;
+      var k = cy * S.gw + cx, w = (dx === 0 && dy === 0) ? 1 : 0.35;
+      S.dep[k] = Math.min(0.95, S.dep[k] + amt * w);
+    }
+  }
+
+  // Substrate rendering: sparse ground reads as a silicon lattice, rich ground as soft organic grain.
+  function drawSubstrate(S, L) {
+    var ctx = S.ctx, step = 14, x, y, d;
+    for (y = 4; y < H; y += step) for (x = 4; x < W; x += step) {
+      d = sample(S, x, y);
+      if (d < 0.5) {
+        var a = 0.04 + 0.14 * (1 - d * 2);
+        ctx.fillStyle = rgba(mix(LINE, PURPLE, 0.35), a);
+        ctx.fillRect(x - 0.8, y - 0.8, 1.6, 1.6);
+      } else {
+        var t = (d - 0.5) * 2;
+        ctx.fillStyle = rgba(GREEN, 0.03 + 0.11 * t);
+        ctx.beginPath(); ctx.arc(x, y, 0.9 + 2.2 * t, 0, TAU); ctx.fill();
+      }
+    }
+  }
+
+  // ---- spatial hash for fusion ------------------------------------------------
+  var HC = 6;
+  function hkey(x, y) { return ((x / HC) | 0) + ',' + ((y / HC) | 0); }
+  function hashAdd(S, x, y, id, idx) { var k = hkey(x, y); (S.hash[k] || (S.hash[k] = [])).push({ x: x, y: y, id: id, idx: idx }); }
+  function hashNear(S, x, y, r, id, idx) {
+    var cx = (x / HC) | 0, cy = (y / HC) | 0, best = null, bd = r * r;
+    for (var dy = -1; dy <= 1; dy++) for (var dx = -1; dx <= 1; dx++) {
+      var list = S.hash[(cx + dx) + ',' + (cy + dy)];
+      if (!list) continue;
+      for (var i = 0; i < list.length; i++) {
+        var p = list[i];
+        if (p.id === id && idx - p.idx < 24) continue;
+        if (p.parent === id) continue;
+        var d2 = (p.x - x) * (p.x - x) + (p.y - y) * (p.y - y);
+        if (d2 < bd) { bd = d2; best = p; }
+      }
+    }
+    return best;
+  }
+
+  // ---- tips -------------------------------------------------------------------
+  var nextId = 1;
+  function makeTip(x, y, h, parent) {
+    return { id: nextId++, parent: parent || 0, x: x, y: y, hOrg: h, hCir: snap45(h), h: h, run: 10 + rnd() * 40, len: 0, idx: 0, starve: 0, o: 0.5,
+      phase: rnd() * TAU, freq: 0.3 + rnd() * 0.5, speed: BASE_SPEED * (0.8 + rnd() * 0.4), sinceHash: 0, alive: true, age: 0 };
+  }
+  function seedLayer(S, L) {
+    for (var s = 0; s < L.seeds; s++) {
+      var side = rnd(), x, y, h;
+      if (side < 0.25) { x = (0.1 + rnd() * 0.8) * W; y = 2; h = Math.PI / 2; }
+      else if (side < 0.5) { x = (0.1 + rnd() * 0.8) * W; y = H - 2; h = -Math.PI / 2; }
+      else if (side < 0.75) { x = 2; y = (0.1 + rnd() * 0.8) * H; h = 0; }
+      else { x = W - 2; y = (0.1 + rnd() * 0.8) * H; h = Math.PI; }
+      S.seedPts.push({ x: x, y: y });
+      var n = 1 + (rnd() < 0.6 ? 1 : 0);
+      for (var i = 0; i < n; i++) S.tips.push(makeTip(x, y, h + (rnd() - 0.5) * 1.2, 0));
+      S.ctx.strokeStyle = rgba(PURPLE, 0.8); S.ctx.lineWidth = L.width;
+      S.ctx.beginPath(); S.ctx.arc(x, y, L.width * 2.4, 0, TAU); S.ctx.stroke();
+    }
+  }
+  function mark(S, L, x, y, o) {
+    var ctx = S.ctx, c = morphColor(o);
+    if (o < 0.5) {
+      ctx.lineWidth = L.width * 0.9; ctx.strokeStyle = rgba(c, 0.9); ctx.fillStyle = rgba(BG, 1);
+      ctx.beginPath(); ctx.arc(x, y, L.width * 2.1, 0, TAU); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = rgba(c, 0.7); ctx.beginPath(); ctx.arc(x, y, L.width * 0.7, 0, TAU); ctx.fill();
+    } else {
+      ctx.fillStyle = rgba(PINK, 0.22); ctx.beginPath(); ctx.arc(x, y, L.width * 3, 0, TAU); ctx.fill();
+      ctx.fillStyle = rgba(PINK, 0.9); ctx.beginPath(); ctx.arc(x, y, L.width * 1.2, 0, TAU); ctx.fill();
+    }
+  }
+  function stepTip(a, S, L, now, dt) {
+    a.age += dt;
+    var d = sample(S, a.x, a.y), g = grad(S, a.x, a.y), gm = Math.sqrt(g.x * g.x + g.y * g.y);
+    var o = smooth(0.32, 0.78, d); a.o = o;
+    var want = gm > 1e-5 ? Math.atan2(g.y, g.x) : a.hOrg;
+    // Organic: steer smoothly up the gradient with a slow wander. Circuit: straight runs, then snap to the 45° nearest the gradient.
+    a.hOrg += angDiff(want, a.hOrg) * 1.6 * dt + Math.sin(now * a.freq + a.phase) * 0.6 * dt + (rnd() - 0.5) * 0.5 * dt;
+    a.run -= a.speed * L.speed * dt;
+    if (a.run <= 0) {
+      a.hCir = snap45(want + (rnd() - 0.5) * 0.7);
+      a.run = 16 + rnd() * 60;
+      if (o < 0.5 && rnd() < 0.7) {
+        S.ctx.lineWidth = L.width * 0.9; S.ctx.strokeStyle = rgba(morphColor(o), 0.9); S.ctx.fillStyle = rgba(BG, 1);
+        S.ctx.beginPath(); S.ctx.arc(a.x, a.y, L.width * 1.6, 0, TAU); S.ctx.fill(); S.ctx.stroke();
+      }
+    }
+    var h = lerpAngle(a.hCir, a.hOrg, o); a.h = h;
+    var sp = a.speed * L.speed * (1 - 0.3 * o) * (0.55 + 0.7 * d);
+    var nx = a.x + Math.cos(h) * sp * dt, ny = a.y + Math.sin(h) * sp * dt;
+
+    S.ctx.strokeStyle = rgba(morphColor(o), 0.88);
+    S.ctx.lineWidth = L.width * (1.05 - 0.35 * o);
+    S.ctx.beginPath(); S.ctx.moveTo(a.x, a.y); S.ctx.lineTo(nx, ny); S.ctx.stroke();
+
+    deplete(S, nx, ny, 0.8 * dt);
+    a.x = nx; a.y = ny; a.len += sp * dt; a.sinceHash += sp * dt;
+    if (a.sinceHash > 4) { a.sinceHash = 0; a.idx++; hashAdd(S, a.x, a.y, a.id, a.idx); }
+
+    // Fusion: a tip that reaches another strand joins it and stops.
+    if (a.len > 30) {
+      var hit = hashNear(S, a.x, a.y, L.width * 2.4 + 2.5, a.id, a.idx);
+      if (hit) {
+        S.ctx.strokeStyle = rgba(morphColor(o), 0.88); S.ctx.beginPath(); S.ctx.moveTo(a.x, a.y); S.ctx.lineTo(hit.x, hit.y); S.ctx.stroke();
+        S.ctx.fillStyle = rgba(morphColor(o), 0.9); S.ctx.beginPath(); S.ctx.arc(hit.x, hit.y, L.width * 1.1, 0, TAU); S.ctx.fill();
+        a.alive = false; joins++; return;
+      }
+    }
+    if (d < STARVE) a.starve += dt; else a.starve = 0;
+    var out = a.x < -4 || a.y < -4 || a.x > W + 4 || a.y > H + 4;
+    if (out || a.starve > 1.4 || a.age > 70) { a.alive = false; if (!out) mark(S, L, a.x, a.y, o); return; }
+    // Branching scales with nutrient density: rich ground branches often, sparse ground rarely.
+    if (S.tips.length < L.tips && a.len > 24 && rnd() < (0.02 + 0.4 * d) * dt) {
+      var ang = o < 0.5 ? h + (rnd() < 0.5 ? 1 : -1) * Math.PI / 2 : h + (rnd() < 0.5 ? 1 : -1) * (0.5 + rnd() * 0.7);
+      var child = makeTip(a.x, a.y, ang, a.id); S.tips.push(child);
+    }
+  }
+  function drawTips(S, L) {
+    var c = S.tctx; c.clearRect(0, 0, W, H);
+    for (var i = 0; i < S.tips.length; i++) {
+      var a = S.tips[i], col = morphColor(a.o);
+      c.fillStyle = rgba(col, 0.18); c.beginPath(); c.arc(a.x, a.y, L.width * 3.5, 0, TAU); c.fill();
+      c.fillStyle = rgba(col, 0.95); c.beginPath(); c.arc(a.x, a.y, L.width * 1.1, 0, TAU); c.fill();
+    }
+  }
+
+  // ---- generations --------------------------------------------------------------
+  function startGeneration() {
+    var hash = xmur3(seed + ':' + gen);
+    rnd = mulberry32(hash());
+    noise = makeNoise(rnd);
+    joins = 0; phase = 'grow'; phaseT = 0;
+    layers = LAYERS.map(function () { return {}; });
+    resize();
+    layers.forEach(function (S, i) {
+      var L = LAYERS[i];
+      S.ctx.clearRect(0, 0, W, H); S.tctx.clearRect(0, 0, W, H);
+      buildField(S, L); drawSubstrate(S, L); seedLayer(S, L);
+      layerEls[i].querySelector('.net').classList.remove('fading');
+      layerEls[i].querySelector('.tips').classList.remove('fading');
+    });
+    document.getElementById('seedTop').textContent = seed;
+    document.getElementById('seedBottom').textContent = seed;
+    document.getElementById('genN').textContent = String(gen);
+  }
+  function liveTips() { var t = 0; layers.forEach(function (S) { t += S.tips.length; }); return t; }
+  function tick(dt) {
+    simTime += dt; phaseT += dt;
+    var now = simTime;
+    if (phase === 'grow') {
+      layers.forEach(function (S, i) {
+        var L = LAYERS[i];
+        for (var n = 0; n < S.tips.length; n++) stepTip(S.tips[n], S, L, now, dt);
+        S.tips = S.tips.filter(function (a) { return a.alive; });
+      });
+      if (liveTips() === 0 || phaseT > GROW_LIMIT) {
+        layers.forEach(function (S, i) { S.tips.forEach(function (a) { mark(S, LAYERS[i], a.x, a.y, a.o); }); S.tips = []; });
+        phase = 'hold'; phaseT = 0;
+      }
+    } else if (phase === 'hold') {
+      if (phaseT > HOLD && !reduced) {
+        phase = 'fade'; phaseT = 0;
+        layerEls.forEach(function (el) { el.querySelector('.net').classList.add('fading'); });
+      }
+    } else if (phase === 'fade') {
+      if (phaseT > FADE + 0.5) { gen++; startGeneration(); }
+    }
+  }
+
+  // ---- parallax and ui -------------------------------------------------------------
+  var target = { x: 0, y: 0 }, cur = { x: 0, y: 0 }, lastPointer = -1e9;
+  var term = document.getElementById('term');
+  window.addEventListener('pointermove', function (e) { target.x = e.clientX / window.innerWidth - 0.5; target.y = e.clientY / window.innerHeight - 0.5; lastPointer = simTime; }, { passive: true });
+  function parallax(now) {
+    if (reduced) return;
+    if (now - lastPointer > 4) { target.x = Math.sin(now * 0.07) * 0.25; target.y = Math.cos(now * 0.05) * 0.2; }
+    cur.x += (target.x - cur.x) * 0.035; cur.y += (target.y - cur.y) * 0.035;
+    layerEls.forEach(function (el, i) { var d = LAYERS[i].depth; el.style.transform = 'translate3d(' + (cur.x * d).toFixed(2) + 'px,' + (cur.y * d).toFixed(2) + 'px,0)'; });
+    term.style.transform = 'translate3d(' + (-cur.x * 6).toFixed(2) + 'px,' + (-cur.y * 6).toFixed(2) + 'px,0)';
+  }
+  var tipN = document.getElementById('tipN'), joinN = document.getElementById('joinN'), phaseWord = document.getElementById('phaseWord'), statLine = document.getElementById('statLine');
+  var lastUi = -1;
+  function ui(now) {
+    if (now - lastUi < 0.25) return;
+    lastUi = now;
+    var t = liveTips();
+    tipN.textContent = String(t); joinN.textContent = String(joins);
+    phaseWord.textContent = phase === 'grow' ? 'growing' : phase === 'hold' ? 'network complete' : 'fading';
+    statLine.textContent = 'gen ' + gen + ' · ' + t + ' tips · ' + (paused ? 'paused' : phase);
+  }
+  function frame(ts) {
+    requestAnimationFrame(frame);
+    if (hidden) { lastTs = ts; return; }
+    var dt = lastTs ? Math.min(0.05, (ts - lastTs) / 1000) : 0.016;
+    lastTs = ts;
+    if (!paused) tick(dt);
+    layers.forEach(function (S, i) { drawTips(S, LAYERS[i]); });
+    parallax(simTime); ui(simTime);
+  }
+
+  document.getElementById('regrow').addEventListener('click', function () {
+    seed = randomSeed(); gen = 1;
+    try { history.replaceState(null, '', '#' + seed); } catch (e) {}
+    startGeneration();
+  });
+  var pauseBtn = document.getElementById('pause');
+  pauseBtn.addEventListener('click', function () { paused = !paused; pauseBtn.textContent = paused ? 'resume' : 'pause'; pauseBtn.setAttribute('aria-pressed', paused ? 'true' : 'false'); });
+  document.addEventListener('visibilitychange', function () { hidden = document.hidden; });
+  var resizeTimer;
+  window.addEventListener('resize', function () { clearTimeout(resizeTimer); resizeTimer = setTimeout(function () { startGeneration(); }, 200); });
+  if (reduced) document.getElementById('motionNote').textContent = 'reduced motion: the network grows once and holds';
+
+  seed = seedFromHash() || todaySeed();
+  startGeneration();
+  // Warm up so the first frame already shows growth from the edges.
+  for (var w = 0; w < (reduced ? 900 : 40); w++) tick(0.1);
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
