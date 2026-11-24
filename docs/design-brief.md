@@ -92,8 +92,21 @@ Three layers. Hyphae spawn at edges and in the interior, grow at about 11 to
 between silicon and mycelium on a ninety-second clock. The clock is global,
 so the morph is a function of time.
 
-**v2, substrate network** (`prototypes/substrate/index.html`, current
-direction). Four layers. A seeded 3-D value-noise field plus two or three
+**v3, fruiting block** (`prototypes/fruiting-block/index.html`, current
+direction). One true 3-D block, not layers. A 28³ voxel grid of nutrient
+weights comes from 3-D value noise plus three to five hotspots. Nine spores
+sit on the block's twelve edges and grow inward. Tips move in three
+dimensions up the nutrient gradient. Rich voxels grow organic strands with
+shallow branches. Poor voxels grow circuit traces on a 26-direction lattice
+with right-angle branches and vias. Tips fuse on contact. A perspective
+camera projects every strand into five depth-of-field canvases, blurred by
+distance from the focal plane. The camera orbits a few degrees from pointer
+position, with an optional slow idle orbit. Rich voxels show as faint dust so
+the volume reads without hiding the network. The block outline is a hairline.
+Generations hold, fade, and regrow as in v2.
+
+**v2, substrate network** (`prototypes/substrate/index.html`, superseded:
+four flat layers read as a moving field, not a volume). Four layers. A seeded 3-D value-noise field plus two or three
 nutrient hotspots defines nutrient density per layer. Hyphae enter from two
 or three edge points per layer and steer up the nutrient gradient. Local
 density sets the growth style: sparse ground grows as circuit traces with 45°
@@ -129,6 +142,8 @@ Reduced-motion users get one fully grown network, no fade, no parallax.
 | 2026-11-24 | No leaves in the background animation | The user did not like them. Buds and pads carry the organic and circuit ends. |
 | 2026-11-24 | Growth follows a nutrient field (v2) rather than a time clock (v1) | The user asked for a 3-D substrate, edge-seeded growth along a gradient, and a style set by local density. |
 | 2026-11-24 | More depth: four layers, parallax up to 42 px, near layer blurred at 3.6 px | The user asked for more depth and more blur on the nearest strands. |
+| 2026-11-24 | True 3-D simulation (v3) over layered 2-D fields (v2) | The user wants a physical system: a mycelium network growing through a fruiting block, watched in 3-D space. Layers with parallax read as a moving field. |
+| 2026-11-24 | Substrate barely visible: faint dust in rich voxels, hairline block outline | The user asked for a transparent substrate so the network is the subject. |
 
 ## Open questions
 

@@ -20,7 +20,7 @@ Written 2026-11-24 for a fresh session with no prior context.
 cd ~/projects/jeethridge.github.io
 git status --short --branch
 git log --oneline --all
-xdg-open prototypes/substrate/index.html
+xdg-open prototypes/fruiting-block/index.html
 ```
 
 `git status` must print a clean tree on `planning/site-design`.
@@ -36,10 +36,13 @@ Done:
   trace-to-hypha growth, ninety-second substrate cycle, seeded by URL hash or
   date, terminal overlay with kitty tab bar, reduced-motion fallback. No
   leaves. Published copy: https://claude.ai/artifact/NE4pH9APV1cd47k8koXMno
-- Background prototype v2 (current direction): seeded 3-D nutrient field,
-  edge-seeded growth up the gradient, density-driven circuit-or-organic
-  style, fusion on contact, hold-fade-regrow generations, four layers.
+- Background prototype v2 (superseded): four flat layers over a 2-D field.
   Published copy: https://claude.ai/artifact/WPS56o5hPdxdiN6k5xHMsh
+- Background prototype v3 (current direction): one 3-D voxel block, spores
+  on the block edges, growth in three dimensions up the nutrient gradient,
+  density-driven circuit-or-organic style, fusion on contact, perspective
+  camera into five depth-of-field canvases, hold-fade-regrow generations.
+  Published copy: https://claude.ai/artifact/ABsSSFFQttPcM38vC4qP1S
 - Design canvas: https://claude.ai/artifact/TRuAqofEhxja5YHQSnxniR
 
 Not started:
@@ -57,13 +60,15 @@ Not started:
 
 ## Next actions, ordered
 
-1. Open `prototypes/substrate/index.html`, let one generation finish (about
-   a minute), and collect the user's reactions on: network density, how
-   readable the circuit-versus-organic split is, fusion frequency, fade
-   timing, and whether the substrate grain reads as depth.
-2. Tune the constants under `tunables` in that file (`LAYERS`, `CELL`,
-   `NOISE_SCALE`, `BASE_SPEED`, `GROW_LIMIT`, `HOLD`, `FADE`, `STARVE`) from
-   those reactions. Commit as a checkpoint.
+1. Open `prototypes/fruiting-block/index.html`, let one generation finish
+   (about ninety seconds), and collect the user's reactions on: whether the
+   block reads as a volume, growth speed, strand visibility, the
+   circuit-versus-organic split, camera motion (idle orbit on or off), and
+   fade timing.
+2. Tune the constants under `tunables` in that file (`N`, `SPORES`,
+   `MAX_TIPS`, `BASE_SPEED`, `FUSE_R`, `STARVE`, `GROW_LIMIT`, `HOLD`, `FADE`,
+   `DIST`, `FILL`, `IDLE_ORBIT`, `POINTER_ORBIT`) from those reactions.
+   Commit as a checkpoint.
 3. Decide open question 1 (code block or prose) and record it in the brief.
 4. Decide the static site generator (open question 2) and scaffold it in
    this repo on the same branch.
