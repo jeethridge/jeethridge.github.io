@@ -20,7 +20,7 @@ Written 2026-11-24 for a fresh session with no prior context.
 cd ~/projects/jeethridge.github.io
 git status --short --branch
 git log --oneline --all
-xdg-open prototypes/background/index.html
+xdg-open prototypes/substrate/index.html
 ```
 
 `git status` must print a clean tree on `planning/site-design`.
@@ -32,9 +32,15 @@ Every item below is done or not started. No partial edits exist.
 Done:
 - Design brief with fixed Dracula roles and recorded decisions.
 - Five design canvas artboards exported to `design/canvas/`.
-- Background prototype v1: three parallax canvas layers, trace-to-hypha
-  growth, ninety-second substrate cycle, seeded by URL hash or date,
-  terminal overlay with kitty tab bar, reduced-motion fallback.
+- Background prototype v1 (checkpoint): three parallax canvas layers,
+  trace-to-hypha growth, ninety-second substrate cycle, seeded by URL hash or
+  date, terminal overlay with kitty tab bar, reduced-motion fallback. No
+  leaves. Published copy: https://claude.ai/artifact/NE4pH9APV1cd47k8koXMno
+- Background prototype v2 (current direction): seeded 3-D nutrient field,
+  edge-seeded growth up the gradient, density-driven circuit-or-organic
+  style, fusion on contact, hold-fade-regrow generations, four layers.
+  Published copy: https://claude.ai/artifact/WPS56o5hPdxdiN6k5xHMsh
+- Design canvas: https://claude.ai/artifact/TRuAqofEhxja5YHQSnxniR
 
 Not started:
 - Static site generator choice and scaffold.
@@ -51,11 +57,13 @@ Not started:
 
 ## Next actions, ordered
 
-1. Open the prototype in a browser and collect the user's reactions on four
-   axes: growth speed, density, blur strength, overlay opacity.
-2. Tune the constants at the top of the script in
-   `prototypes/background/index.html` (`LAYERS`, `CYCLE`, `MORPH_SECONDS`)
-   from those reactions. Commit as a checkpoint.
+1. Open `prototypes/substrate/index.html`, let one generation finish (about
+   a minute), and collect the user's reactions on: network density, how
+   readable the circuit-versus-organic split is, fusion frequency, fade
+   timing, and whether the substrate grain reads as depth.
+2. Tune the constants under `tunables` in that file (`LAYERS`, `CELL`,
+   `NOISE_SCALE`, `BASE_SPEED`, `GROW_LIMIT`, `HOLD`, `FADE`, `STARVE`) from
+   those reactions. Commit as a checkpoint.
 3. Decide open question 1 (code block or prose) and record it in the brief.
 4. Decide the static site generator (open question 2) and scaffold it in
    this repo on the same branch.

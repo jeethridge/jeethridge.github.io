@@ -62,8 +62,10 @@ One italic line per page carries softness. No serif.
 
 A line starts as a PCB (printed circuit board) trace: purple, straight runs,
 45° and 90° turns, via pads at the turns. Along its length it becomes cyan and
-starts to curve. It ends green as a hypha with leaves and a pink bud. The
-morph point moves with the seed. The same motif appears as:
+starts to curve. It ends green as a hypha with a pink bud. No leaves: the
+user rejected them in the background on 2026-11-24. The leaf stays only in
+the logo mark and the tech tree node. The morph point moves with the seed.
+The same motif appears as:
 
 - the background animation,
 - a section divider (trace on the left, vine on the right),
@@ -80,14 +82,28 @@ in the same colors.
 
 ### Background: depth and slow motion
 
-Three canvas layers (far, mid, near) with a focal plane at mid. Far and near
-are blurred with CSS filters. Pointer position tilts the layers by depth for
-parallax. With no pointer the scene drifts on its own. Hyphae grow slowly
-(about 11 to 20 px per second at mid depth), fade from the tail, and the scene
-breathes between silicon and mycelium on a ninety-second cycle. Reduced-motion
-users get twelve seconds of growth, then a still frame.
+Two prototypes exist. Both share the terminal overlay, the parallax, and the
+depth-of-field treatment: blurred far and near layers around a sharp focal
+plane, pointer tilt by depth, and self-drift with no pointer.
 
-The prototype is `prototypes/background/index.html`.
+**v1, breathing field** (`prototypes/background/index.html`, checkpoint).
+Three layers. Hyphae spawn at edges and in the interior, grow at about 11 to
+20 px per second at mid depth, fade from the tail, and the scene breathes
+between silicon and mycelium on a ninety-second clock. The clock is global,
+so the morph is a function of time.
+
+**v2, substrate network** (`prototypes/substrate/index.html`, current
+direction). Four layers. A seeded 3-D value-noise field plus two or three
+nutrient hotspots defines nutrient density per layer. Hyphae enter from two
+or three edge points per layer and steer up the nutrient gradient. Local
+density sets the growth style: sparse ground grows as circuit traces with 45°
+turns and vias, rich ground grows organic and branches often. Tips deplete
+the field as they pass, so the network spreads. A tip that reaches another
+strand fuses with it and stops. When every tip starves or fuses, the network
+holds, fades over fourteen seconds, and a new generation grows from a
+mutated seed. The morph is a function of place, not time.
+
+Reduced-motion users get one fully grown network, no fade, no parallax.
 
 ## Information architecture
 
@@ -110,6 +126,9 @@ The prototype is `prototypes/background/index.html`.
 | 2026-11-24 | JetBrains Mono only, no serif | Matches the terminal. One italic line replaces the serif accent. |
 | 2026-11-24 | Roguelite in structure, not in visuals | Taste signal for a Senior/Staff audience. |
 | 2026-11-24 | Secondary text `#9AA3C9`, not `#6272A4` | Contrast ratio 5.7:1 versus 3.0:1 on bg. |
+| 2026-11-24 | No leaves in the background animation | The user did not like them. Buds and pads carry the organic and circuit ends. |
+| 2026-11-24 | Growth follows a nutrient field (v2) rather than a time clock (v1) | The user asked for a 3-D substrate, edge-seeded growth along a gradient, and a style set by local density. |
+| 2026-11-24 | More depth: four layers, parallax up to 42 px, near layer blurred at 3.6 px | The user asked for more depth and more blur on the nearest strands. |
 
 ## Open questions
 
