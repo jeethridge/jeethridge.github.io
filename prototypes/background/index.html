@@ -24,9 +24,9 @@ body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--mono);font-
     radial-gradient(circle at 1px 1px, rgba(68,71,90,0.42) 0.8px, transparent 1px) 0 0 / 28px 28px,
     radial-gradient(ellipse 70% 60% at 50% 42%, var(--bg-lift) 0%, var(--bg) 58%, var(--bg-deep) 100%);}
 #bg canvas{position:absolute;left:-6%;top:-6%;width:112%;height:112%;will-change:transform}
-.layer-far{filter:blur(3px);opacity:.55}
-.layer-mid{opacity:.95}
-.layer-near{filter:blur(1.6px);opacity:.75}
+.layer-far{filter:blur(3px);opacity:.65}
+.layer-mid{opacity:1}
+.layer-near{filter:blur(1.6px);opacity:.85}
 
 main{position:relative;z-index:1;min-height:100%;box-sizing:border-box;display:flex;align-items:center;justify-content:center;
   padding-block:40px;padding-left:max(16px, env(safe-area-inset-left,0px));padding-right:max(16px, env(safe-area-inset-right,0px))}
@@ -246,6 +246,9 @@ button.go{color:var(--green);border-color:rgba(80,250,123,.5)}
     var x, y, heading;
     if (parent) {
       x = parent.x; y = parent.y; heading = branchHeading;
+    } else if (rnd() < 0.55) {
+      // Interior spore: starts anywhere on the canvas, any heading, so growth is visible without a long warm-up.
+      x = rnd() * W; y = rnd() * H; heading = rnd() * TAU;
     } else {
       var side = rnd();
       if (side < 0.5) { x = rnd() * W; y = side < 0.25 ? -8 : H + 8; heading = side < 0.25 ? Math.PI / 2 : -Math.PI / 2; }
@@ -389,7 +392,7 @@ button.go{color:var(--green);border-color:rgba(80,250,123,.5)}
     document.getElementById('seedTop').textContent = seed;
     document.getElementById('seedBottom').textContent = seed;
     // Pre-grow so the first frame is not empty.
-    var warm = reduced ? 40 : 18;
+    var warm = reduced ? 48 : 96;
     for (var s = 0; s < warm; s++) tick(0.25, true);
   }
 
