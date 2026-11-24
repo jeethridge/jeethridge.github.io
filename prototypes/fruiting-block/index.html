@@ -225,7 +225,7 @@ button[aria-pressed="true"]{border-color:var(--orange);color:var(--orange)}
   var GROW_LIMIT = 90;     // seconds before a generation is forced to finish
   var HOLD = 8, FADE = 14; // seconds
   var DIST = 2.7;          // camera distance from the block center
-  var FILL = 0.62;         // block half-size as a fraction of the shorter viewport side
+  var FILL = 0.42;         // block half-size as a fraction of the longer viewport side, so the block spans the window
   var IDLE_ORBIT = 0.06;   // radians of slow self-orbit when the pointer is idle
   var POINTER_ORBIT = 0.22;// radians of orbit from the pointer
 
@@ -249,7 +249,7 @@ button[aria-pressed="true"]{border-color:var(--orange);color:var(--orange)}
     var r = stage.getBoundingClientRect();
     W = Math.max(1, Math.round(r.width)); H = Math.max(1, Math.round(r.height));
     CX = W / 2; CY = H * 0.5;
-    F = FILL * Math.min(W, H) * DIST; S0 = F / DIST;
+    F = FILL * Math.max(W, H) * DIST; S0 = F / DIST;
     canvases.forEach(function (c, i) { c.width = Math.round(W * DPR); c.height = Math.round(H * DPR); ctxs[i].setTransform(DPR, 0, 0, DPR, 0, 0); ctxs[i].lineCap = 'round'; ctxs[i].lineJoin = 'round'; });
   }
 
@@ -415,7 +415,7 @@ button[aria-pressed="true"]{border-color:var(--orange);color:var(--orange)}
     for (i = 0; i < 5; i++) BIN_CTX[i].clearRect(0, 0, W, H);
 
     // Block outline: hairline, so the volume has a boundary without a box drawing attention.
-    ctx = BIN_CTX[2]; ctx.strokeStyle = rgba(LINE, 0.35); ctx.lineWidth = 1; ctx.beginPath();
+    ctx = BIN_CTX[2]; ctx.strokeStyle = rgba(LINE, 0.55); ctx.lineWidth = 1; ctx.beginPath();
     for (i = 0; i < EDGES.length; i++) { project(CUBE[EDGES[i][0]], pa); project(CUBE[EDGES[i][1]], pb); ctx.moveTo(pa.x, pa.y); ctx.lineTo(pb.x, pb.y); }
     ctx.stroke();
 
@@ -432,7 +432,7 @@ button[aria-pressed="true"]{border-color:var(--orange);color:var(--orange)}
     for (i = 0; i < segs.length; i++) {
       var sg = segs[i]; project(sg.a, pa); project(sg.b, pb);
       var bin = binOf((pa.z + pb.z) / 2), cidx = Math.round(sg.o * 8);
-      var w = (1.9 - 0.6 * sg.o) * (pa.s + pb.s) / 2, widx = Math.max(1, Math.round(w * 2));
+      var w = (2.2 - 0.7 * sg.o) * (pa.s + pb.s) / 2, widx = Math.max(1, Math.round(w * 2));
       var key = bin * 1000 + cidx * 50 + widx;
       var gl = groups[key] || (groups[key] = { bin: bin, c: cidx, w: widx / 2, pts: [] });
       gl.pts.push(pa.x, pa.y, pb.x, pb.y);
@@ -540,7 +540,7 @@ button[aria-pressed="true"]{border-color:var(--orange);color:var(--orange)}
   resize();
   seed = seedFromHash() || todaySeed();
   startGeneration();
-  for (var w = 0; w < (reduced ? 900 : 50); w++) tick(0.1);
+  for (var w = 0; w < (reduced ? 900 : 120); w++) tick(0.1);
   requestAnimationFrame(frame);
 })();
 </script>
