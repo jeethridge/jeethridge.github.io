@@ -72,10 +72,9 @@ Not started:
    `TURN_RATE`, `INTERNODE_RICH`, `INTERNODE_POOR`, `BRANCH_ANGLE`, `FUSE_R`,
    `FUSE_P`, `STARVE`, `GROW_LIMIT`, `HOLD`, `FADE`, `DIST`, `FILL`,
    `IDLE_ORBIT`, `POINTER_ORBIT`) from those reactions. Commit as a checkpoint.
-   Known bias: spores sit on the block faces where nutrient is lowest, so
-   early growth reads mostly as purple traces. If the user wants more organic
-   growth early, move hotspots toward the faces or raise the floor of the
-   extension rate.
+   The substrate is rich with low-nutrient pockets (`BASE_NUTRIENT`,
+   `POCKETS_MIN`, `POCKETS_MAX`). If the pockets never fill, raise the floor
+   of the extension rate or lower `STARVE`.
 3. Decide open question 1 (code block or prose) and record it in the brief.
 4. Decide the static site generator (open question 2) and scaffold it in
    this repo on the same branch.

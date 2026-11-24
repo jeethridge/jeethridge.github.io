@@ -94,8 +94,10 @@ so the morph is a function of time.
 
 **v3, fruiting block** (`prototypes/fruiting-block/index.html`, current
 direction). One true 3-D block, not layers. A 28³ voxel grid of nutrient
-weights comes from 3-D value noise plus three to five hotspots. Eight spores
-sit on the block's twelve edges and grow inward.
+weights is rich throughout (floor 0.55, 3-D value noise above it) with three
+to five low-nutrient pockets carved out by Gaussian voids. Pockets are hard
+to colonize: tips slow, branch rarely, grow as traces, and often stall at a
+pad. Eight spores sit on the block's twelve edges and grow inward.
 
 Growth follows the neighbour-sensing model of fungal morphogenesis
 (Meskauskas, Fricker and Moore, 2004) with nutrient uptake in the style of
@@ -166,6 +168,7 @@ Reduced-motion users get one fully grown network, no fade, no parallax.
 | 2026-11-24 | Substrate barely visible: faint dust only, no block outline | The user asked for a transparent substrate and no visible cube edges. Perspective carries the volume. |
 | 2026-11-24 | Growth rules from the neighbour-sensing model, not ad hoc steering | The user wants a digital twin of an organic process. Negative autotropism and lateral branching are what make a colony look like a colony. |
 | 2026-11-24 | Hyphae rendered as shaded tubes with fog and cords | The user asked for strands that look three-dimensional. |
+| 2026-11-24 | Rich substrate with low-nutrient pockets, not poor substrate with hotspots | The user's call. Organic growth is the norm, traces mark the hard-to-colonize pockets. |
 
 ## Open questions
 
