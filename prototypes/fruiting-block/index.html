@@ -291,9 +291,11 @@ button[aria-pressed="true"]{border-color:var(--orange);color:var(--orange)}
     }
   }
   function sampleGrid(arr, x, y, z) {
+    // Clamp to the grid so the outermost voxel layer, where the spores sit, samples its own value.
+    var hiI = N - 1.001;
     var fx = (x + 1) / cell - 0.5, fy = (y + 1) / cell - 0.5, fz = (z + 1) / cell - 0.5;
+    fx = fx < 0 ? 0 : fx > hiI ? hiI : fx; fy = fy < 0 ? 0 : fy > hiI ? hiI : fy; fz = fz < 0 ? 0 : fz > hiI ? hiI : fz;
     var ix = Math.floor(fx), iy = Math.floor(fy), iz = Math.floor(fz);
-    if (ix < 0 || iy < 0 || iz < 0 || ix >= N - 1 || iy >= N - 1 || iz >= N - 1) return 0;
     var tx = fx - ix, ty = fy - iy, tz = fz - iz, base = (iz * N + iy) * N + ix, NN = N * N;
     var c00 = arr[base] + (arr[base + 1] - arr[base]) * tx, c10 = arr[base + N] + (arr[base + N + 1] - arr[base + N]) * tx;
     var c01 = arr[base + NN] + (arr[base + NN + 1] - arr[base + NN]) * tx, c11 = arr[base + NN + N] + (arr[base + NN + N + 1] - arr[base + NN + N]) * tx;
@@ -387,7 +389,7 @@ button[aria-pressed="true"]{border-color:var(--orange);color:var(--orange)}
     }
     a.dir = norm([a.dCir[0] + (dOrg[0] - a.dCir[0]) * o, a.dCir[1] + (dOrg[1] - a.dCir[1]) * o, a.dCir[2] + (dOrg[2] - a.dCir[2]) * o]);
     // Extension rate: Monod in nutrient, a little faster on poor ground so traces read as efficient.
-    var v = VMAX * (d / (K_NUTRIENT + d)) * (1.15 - 0.3 * o);
+    var v = VMAX * (0.12 + 0.88 * d / (K_NUTRIENT + d)) * (1.15 - 0.3 * o);
     var moved = v * dt;
     p[0] += a.dir[0] * moved; p[1] += a.dir[1] * moved; p[2] += a.dir[2] * moved;
     a.len += moved; a.sinceBranch += moved;
