@@ -148,7 +148,7 @@ button[aria-pressed="true"]{border-color:var(--orange);color:var(--orange)}
             <span>fusions<b id="joinN">0</b></span>
             <span>hyphae<b id="segN">0</b></span>
           </div>
-          <div class="note">A 28³ voxel block of rich substrate with a few low-nutrient pockets. Spores on the block's edges grow inward. Tips extend at a rate set by local nutrient, branch laterally behind the tip, and steer away from existing hyphae so the colony spreads as a front. Pockets are slow to colonize and grow as traces.</div>
+          <div class="note">A 28³ voxel block of rich substrate with a few low-nutrient pockets. Spores on the block's edges grow inward. Tips extend at a rate set by local nutrient, branch laterally behind the tip, and steer away from existing hyphae so the colony spreads as a front. Pockets take far longer to colonize, and growth inside them straightens into traces.</div>
         </div>
       </div>
     </div>
@@ -223,23 +223,23 @@ button[aria-pressed="true"]{border-color:var(--orange);color:var(--orange)}
   var N = 28;               // voxels per axis
   var BASE_NUTRIENT = 0.55; // floor of the rich substrate; noise fills the range above it
   var POCKETS_MIN = 3, POCKETS_MAX = 5; // low-nutrient pockets per generation
-  var SPORES = 8;           // spores on the block's edges per generation
-  var MAX_TIPS = 70;        // live tips cap
+  var SPORES = 6;           // spores on the block's edges per generation
+  var MAX_TIPS = 40;        // live tips cap
   var VMAX = 0.06;          // tip extension rate at saturating nutrient, world units per second
-  var K_NUTRIENT = 0.18;    // half-saturation nutrient for extension rate (Monod form)
+  var K_RATE = 0.35;        // half-saturation of the extension rate (sigmoid in nutrient)
   var STEP_LEN = 0.014;     // world units between stored hyphal points
-  var FUSE_R = 0.018;       // anastomosis radius
-  var FUSE_P = 0.6;         // probability a contact fuses rather than passes
-  var STARVE = 0.05;        // raw nutrient below which a tip stops
-  var W_CHEMO = 1.1;        // chemotropism: pull up the nutrient gradient
-  var W_AUTO = 2.2;         // negative autotropism: push away from existing hyphae
-  var W_WANDER = 0.3;       // random walk of the tip
-  var TURN_RATE = 1.6;      // how fast a tip can reorient, per second
-  var INTERNODE_RICH = 0.07, INTERNODE_POOR = 0.26; // distance between lateral branches by nutrient
+  var FUSE_R = 0.016;       // anastomosis radius
+  var FUSE_P = 0.35;        // probability a contact fuses rather than passes
+  var STARVE = 0.03;        // raw nutrient below which a tip stops
+  var W_CHEMO = 1.0;        // chemotropism: pull up the nutrient gradient
+  var W_AUTO = 2.6;         // negative autotropism: push away from existing hyphae
+  var W_WANDER = 0.18;      // random walk of the tip
+  var TURN_RATE = 1.1;      // organic reorientation rate, per second
+  var INTERNODE_RICH = 0.11, INTERNODE_POOR = 0.42; // distance between lateral branches by nutrient
   var BRANCH_ANGLE = 65 * Math.PI / 180, BRANCH_SPREAD = 14 * Math.PI / 180;
-  var GROW_LIMIT = 110;     // seconds before a generation is forced to finish
+  var GROW_LIMIT = 120;     // seconds before a generation is forced to finish
   var HOLD = 8, FADE = 14;  // seconds
-  var DIST = 2.25;          // camera distance from the block center (closer = stronger perspective)
+  var DIST = 2.25;          // camera distance from the block center
   var FILL = 0.44;          // block half-size as a fraction of the longer viewport side
   var IDLE_ORBIT = 0.06;    // radians of slow self-orbit when the pointer is idle
   var POINTER_ORBIT = 0.24; // radians of orbit from the pointer
@@ -260,7 +260,7 @@ button[aria-pressed="true"]{border-color:var(--orange);color:var(--orange)}
   var W = 0, H = 0, CX = 0, CY = 0, F = 1, S0 = 1;
   var seed = '', gen = 1, rnd, noise;
   var field, dep, hyph, cell;
-  var tips = [], segs = [], marks = [], hash = {}, spores = [], dust = [], joins = 0;
+  var tips = [], strands = [], marks = [], hash = {}, spores = [], dust = [], joins = 0, pointCount = 0;
   var phase = 'grow', phaseT = 0, simTime = 0, lastTs = 0, paused = false, hidden = false, orbitOn = !reduced;
 
   function resize() {
@@ -275,7 +275,6 @@ button[aria-pressed="true"]{border-color:var(--orange);color:var(--orange)}
   function buildBlock() {
     cell = 2 / N;
     field = new Float32Array(N * N * N); dep = new Float32Array(N * N * N); hyph = new Float32Array(N * N * N);
-    // A rich substrate throughout, with a few low-nutrient pockets that are hard to colonize.
     var pockets = [], k = POCKETS_MIN + Math.floor(rnd() * (POCKETS_MAX - POCKETS_MIN + 1)), i, x, y, z, v, h, d2;
     for (i = 0; i < k; i++) pockets.push({ x: rnd() * 1.5 - 0.75, y: rnd() * 1.5 - 0.75, z: rnd() * 1.5 - 0.75, s: 0.16 + rnd() * 0.18, a: 0.85 + rnd() * 0.13 });
     var zoff = gen * 3.7;
@@ -285,7 +284,6 @@ button[aria-pressed="true"]{border-color:var(--orange);color:var(--orange)}
       for (h = 0; h < pockets.length; h++) { d2 = (x - pockets[h].x) * (x - pockets[h].x) + (y - pockets[h].y) * (y - pockets[h].y) + (z - pockets[h].z) * (z - pockets[h].z); v *= 1 - pockets[h].a * Math.exp(-d2 / (2 * pockets[h].s * pockets[h].s)); }
       i = (iz * N + iy) * N + ix; field[i] = clamp01(v);
     }
-    // Dust: a sparse sample of voxels so the volume reads without a box. Pockets show as sparse purple.
     dust = [];
     for (iz = 0; iz < N; iz += 2) for (iy = 0; iy < N; iy += 2) for (ix = 0; ix < N; ix += 2) {
       v = field[(iz * N + iy) * N + ix];
@@ -293,7 +291,6 @@ button[aria-pressed="true"]{border-color:var(--orange);color:var(--orange)}
     }
   }
   function sampleGrid(arr, x, y, z) {
-    // Clamp to the grid so the outermost voxel layer, where the spores sit, samples its own value.
     var hiI = N - 1.001;
     var fx = (x + 1) / cell - 0.5, fy = (y + 1) / cell - 0.5, fz = (z + 1) / cell - 0.5;
     fx = fx < 0 ? 0 : fx > hiI ? hiI : fx; fy = fy < 0 ? 0 : fy > hiI ? hiI : fy; fz = fz < 0 ? 0 : fz > hiI ? hiI : fz;
@@ -307,11 +304,11 @@ button[aria-pressed="true"]{border-color:var(--orange);color:var(--orange)}
   function nutrient(p) { return clamp01(sampleGrid(field, p[0], p[1], p[2])); }
   function nutrientLeft(x, y, z) { return clamp01(sampleGrid(field, x, y, z) - sampleGrid(dep, x, y, z)); }
   function gradNutrient(p) {
-    var e = cell * 1.2;
+    var e = cell * 1.5;
     return [nutrientLeft(p[0] + e, p[1], p[2]) - nutrientLeft(p[0] - e, p[1], p[2]), nutrientLeft(p[0], p[1] + e, p[2]) - nutrientLeft(p[0], p[1] - e, p[2]), nutrientLeft(p[0], p[1], p[2] + e) - nutrientLeft(p[0], p[1], p[2] - e)];
   }
   function gradHyphae(p) {
-    var e = cell * 1.5;
+    var e = cell * 2;
     return [sampleGrid(hyph, p[0] + e, p[1], p[2]) - sampleGrid(hyph, p[0] - e, p[1], p[2]), sampleGrid(hyph, p[0], p[1] + e, p[2]) - sampleGrid(hyph, p[0], p[1] - e, p[2]), sampleGrid(hyph, p[0], p[1], p[2] + e) - sampleGrid(hyph, p[0], p[1], p[2] - e)];
   }
   function splat(arr, p, amt, cap) {
@@ -347,8 +344,10 @@ button[aria-pressed="true"]{border-color:var(--orange);color:var(--orange)}
   var nextId = 1;
   function internode(d) { return (INTERNODE_POOR + (INTERNODE_RICH - INTERNODE_POOR) * d) * (0.6 + 0.8 * rnd()); }
   function makeTip(p, dir, parent, d) {
-    return { id: nextId++, parent: parent, p: p.slice(), last: p.slice(), dir: dir.slice(), dCir: snapDir(dir), wander: randUnit(),
-      run: 0.05 + rnd() * 0.2, sinceBranch: 0, nextBranch: internode(d), age: 0, len: 0, idx: 0, starve: 0, bounces: 0, o: 0.5, alive: true };
+    var strand = { pts: [p.slice()], o: [0.5], t: [simTime] };
+    strands.push(strand); pointCount++;
+    return { id: nextId++, parent: parent, p: p.slice(), last: p.slice(), dir: dir.slice(), dCir: snapDir(dir), mode: 'org', wander: randUnit(),
+      run: 0, sinceBranch: 0, nextBranch: internode(d), age: 0, len: 0, idx: 0, starve: 0, bounces: 0, o: 0.5, alive: true, strand: strand };
   }
   function seedBlock() {
     spores = [];
@@ -357,69 +356,85 @@ button[aria-pressed="true"]{border-color:var(--orange);color:var(--orange)}
       for (var a = 0; a < 3; a++) p[a] = a === free ? rnd() * 1.6 - 0.8 : (rnd() < 0.5 ? -0.98 : 0.98);
       spores.push(p.slice());
       var inward = norm([-p[0] + (rnd() - 0.5) * 0.5, -p[1] + (rnd() - 0.5) * 0.5, -p[2] + (rnd() - 0.5) * 0.5]);
-      var n = 2 + (rnd() < 0.5 ? 1 : 0), d = nutrient(p);
-      for (var i = 0; i < n; i++) tips.push(makeTip(p, norm([inward[0] + (rnd() - 0.5) * 0.8, inward[1] + (rnd() - 0.5) * 0.8, inward[2] + (rnd() - 0.5) * 0.8]), 0, d));
+      var d = nutrient(p);
+      for (var i = 0; i < 2; i++) tips.push(makeTip(p, norm([inward[0] + (rnd() - 0.5) * 0.8, inward[1] + (rnd() - 0.5) * 0.8, inward[2] + (rnd() - 0.5) * 0.8]), 0, d));
     }
   }
   function lateralBranch(a, dir, o, d) {
-    // A lateral branch leaves the parent hypha at about 65 degrees in a random plane. Poor ground snaps it to the lattice at 90 degrees.
     var r = randUnit(), proj = dot(r, dir), perp = norm([r[0] - dir[0] * proj, r[1] - dir[1] * proj, r[2] - dir[2] * proj]);
-    var ang = o < 0.5 ? Math.PI / 2 : BRANCH_ANGLE + gauss() * BRANCH_SPREAD, ca = Math.cos(ang), sa = Math.sin(ang);
+    var circuit = rnd() < (1 - o) * (1 - o);
+    var ang = circuit ? Math.PI / 2 : BRANCH_ANGLE + gauss() * BRANCH_SPREAD, ca = Math.cos(ang), sa = Math.sin(ang);
     var nd = norm([dir[0] * ca + perp[0] * sa, dir[1] * ca + perp[1] * sa, dir[2] * ca + perp[2] * sa]);
-    if (o < 0.5) nd = snapDir(nd);
+    if (circuit) nd = snapDir(nd);
     var child = makeTip(a.p, nd, a.id, d); child.last = a.p.slice(); tips.push(child);
+  }
+  function storePoint(a, o) {
+    a.strand.pts.push(a.p.slice()); a.strand.o.push(o); a.strand.t.push(simTime); pointCount++;
+    a.last = a.p.slice(); a.idx++; hashAdd(a.last, a.id, a.idx);
+    splat(hyph, a.p, 1, 8);
   }
   function stepTip(a, dt) {
     a.age += dt;
     var p = a.p;
     var d = nutrient(p);
-    var o = smooth(0.3, 0.78, d); a.o = o;
+    var o = smooth(0.25, 0.8, d); a.o = o;
     var g = gradNutrient(p), gl = len3(g), gn = gl > 1e-6 ? [g[0] / gl, g[1] / gl, g[2] / gl] : [0, 0, 0];
-    var gh = gradHyphae(p), hl = len3(gh), an = hl > 1e-6 ? [-gh[0] / hl, -gh[1] / hl, -gh[2] / hl] : [0, 0, 0];
-    var autoW = W_AUTO * Math.min(1, hl * 4); // repulsion grows with the local hyphal gradient
-    a.wander = norm([a.wander[0] + (rnd() - 0.5) * 1.5 * dt, a.wander[1] + (rnd() - 0.5) * 1.5 * dt, a.wander[2] + (rnd() - 0.5) * 1.5 * dt]);
+    // Autotropism samples the hyphal field ahead of the tip, so the tip's own trail does not steer it.
+    var look = [p[0] + a.dir[0] * cell * 2.5, p[1] + a.dir[1] * cell * 2.5, p[2] + a.dir[2] * cell * 2.5];
+    var gh = gradHyphae(look), hl = len3(gh), an = hl > 1e-6 ? [-gh[0] / hl, -gh[1] / hl, -gh[2] / hl] : [0, 0, 0];
+    var autoW = W_AUTO * Math.min(1, hl * 4);
+    a.wander = norm([a.wander[0] + (rnd() - 0.5) * 1.2 * dt, a.wander[1] + (rnd() - 0.5) * 1.2 * dt, a.wander[2] + (rnd() - 0.5) * 1.2 * dt]);
     var want = norm([gn[0] * W_CHEMO + an[0] * autoW + a.wander[0] * W_WANDER + a.dir[0] * 1.5, gn[1] * W_CHEMO + an[1] * autoW + a.wander[1] * W_WANDER + a.dir[1] * 1.5, gn[2] * W_CHEMO + an[2] * autoW + a.wander[2] * W_WANDER + a.dir[2] * 1.5]);
-    // Organic: reorient toward the wanted direction at a limited rate, so hyphae stay nearly straight.
-    var k = Math.min(1, TURN_RATE * dt);
-    var dOrg = norm([a.dir[0] + (want[0] - a.dir[0]) * k, a.dir[1] + (want[1] - a.dir[1]) * k, a.dir[2] + (want[2] - a.dir[2]) * k]);
-    // Circuit: straight runs on the lattice, re-aimed at the wanted direction at each turn.
-    a.run -= VMAX * dt;
-    if (a.run <= 0) {
-      a.dCir = snapDir([want[0] + (rnd() - 0.5) * 0.5, want[1] + (rnd() - 0.5) * 0.5, want[2] + (rnd() - 0.5) * 0.5]);
-      a.run = 0.06 + rnd() * 0.22;
-      if (o < 0.5 && rnd() < 0.6) marks.push({ k: 'via', p: p.slice(), o: o, t: simTime });
-    }
-    a.dir = norm([a.dCir[0] + (dOrg[0] - a.dCir[0]) * o, a.dCir[1] + (dOrg[1] - a.dCir[1]) * o, a.dCir[2] + (dOrg[2] - a.dCir[2]) * o]);
-    // Extension rate: Monod in nutrient, a little faster on poor ground so traces read as efficient.
-    var v = VMAX * (0.12 + 0.88 * d / (K_NUTRIENT + d)) * (1.15 - 0.3 * o);
+
+    // Each run is either organic (smooth steering) or circuit (a fixed lattice direction). Poor ground makes circuit runs likely.
+    // Corners sharpen as nutrient falls, so a hypha entering a pocket straightens, then angles, then snaps.
+    var target, rate;
+    if (a.mode === 'cir') { target = a.dCir; rate = TURN_RATE * (1.5 + 10 * (1 - o)); }
+    else { target = want; rate = TURN_RATE; }
+    var k = Math.min(1, rate * dt);
+    a.dir = norm([a.dir[0] + (target[0] - a.dir[0]) * k, a.dir[1] + (target[1] - a.dir[1]) * k, a.dir[2] + (target[2] - a.dir[2]) * k]);
+
+    // Extension rate: a sigmoid in nutrient. Rich voxels grow near full speed, pockets at a small fraction.
+    var v = VMAX * (0.04 + 0.96 * d * d / (K_RATE * K_RATE + d * d));
     var moved = v * dt;
     p[0] += a.dir[0] * moved; p[1] += a.dir[1] * moved; p[2] += a.dir[2] * moved;
-    a.len += moved; a.sinceBranch += moved;
+    a.len += moved; a.sinceBranch += moved; a.run -= moved;
     splat(dep, p, 0.25 * dt, 0.7);
 
-    // Block walls: a hypha that meets a wall turns along it. After a few bounces it stops.
+    if (a.run <= 0) {
+      var pCir = (1 - o) * (1 - o);
+      if (rnd() < pCir) {
+        a.mode = 'cir';
+        a.dCir = snapDir([want[0] + (rnd() - 0.5) * 0.4, want[1] + (rnd() - 0.5) * 0.4, want[2] + (rnd() - 0.5) * 0.4]);
+        a.run = 0.08 + rnd() * 0.22;
+        if (o < 0.6 && rnd() < 0.7) marks.push({ k: 'via', p: p.slice(), o: o, t: simTime });
+      } else { a.mode = 'org'; a.run = 0.03 + rnd() * 0.05; }
+    }
+
+    // Block walls: a hypha that meets a wall bends along it. After a few bounces it stops.
     for (var ax = 0; ax < 3; ax++) {
       if (Math.abs(p[ax]) > 0.995) {
-        p[ax] = p[ax] > 0 ? 0.995 : -0.995; a.dir[ax] = -a.dir[ax] * 0.3; a.dir = norm(a.dir); a.dCir = snapDir(a.dir); a.bounces++;
+        p[ax] = p[ax] > 0 ? 0.995 : -0.995; a.dir[ax] = 0; a.dir = norm(a.dir); if (a.mode === 'cir') a.dCir = snapDir(a.dir); a.bounces++;
       }
     }
     var dx = p[0] - a.last[0], dy = p[1] - a.last[1], dz = p[2] - a.last[2];
     if (dx * dx + dy * dy + dz * dz >= STEP_LEN * STEP_LEN) {
-      segs.push({ a: a.last.slice(), b: p.slice(), o: o, t: simTime, id: a.id });
-      a.last = p.slice(); a.idx++; hashAdd(a.last, a.id, a.idx);
-      splat(hyph, p, 1, 8);
+      storePoint(a, o);
       if (a.len > 0.1) {
         var hit = hashNear(p, a.id, a.idx);
-        if (hit && rnd() < FUSE_P) { segs.push({ a: p.slice(), b: hit.p.slice(), o: o, t: simTime, id: a.id }); marks.push({ k: 'join', p: hit.p.slice(), o: o, t: simTime }); a.alive = false; joins++; return; }
+        if (hit && rnd() < FUSE_P) {
+          a.strand.pts.push(hit.p.slice()); a.strand.o.push(o); a.strand.t.push(simTime); pointCount++;
+          marks.push({ k: 'join', p: hit.p.slice(), o: o, t: simTime }); a.alive = false; joins++; return;
+        }
       }
     }
     if (a.age > 5 && d < STARVE) a.starve += dt; else a.starve = 0;
-    if (a.starve > 2.5 || a.bounces > 3 || a.age > 90) {
+    if (a.starve > 4 || a.bounces > 3 || a.age > 110) {
       a.alive = false; marks.push({ k: o < 0.5 ? 'pad' : 'bud', p: p.slice(), o: o, t: simTime }); return;
     }
     if (a.sinceBranch > a.nextBranch) {
       a.sinceBranch = 0; a.nextBranch = internode(d);
-      if (tips.length < MAX_TIPS && d > STARVE * 1.5) lateralBranch(a, a.dir, o, d);
+      if (tips.length < MAX_TIPS && d > STARVE * 2) lateralBranch(a, a.dir, o, d);
     }
   }
 
@@ -442,7 +457,7 @@ button[aria-pressed="true"]{border-color:var(--orange);color:var(--orange)}
     o.x = CX + x1 * s; o.y = CY + y2 * s; o.z = zc; o.s = s / S0;
   }
   function binOf(zc) { var dz = zc - DIST; for (var i = 0; i < BIN_EDGE.length; i++) if (dz < BIN_EDGE[i]) return i; return NB - 1; }
-  var pa = { x: 0, y: 0, z: 0, s: 1 }, pb = { x: 0, y: 0, z: 0, s: 1 };
+  var pa = { x: 0, y: 0, z: 0, s: 1 };
   var COLOR_STEPS = 9, colorCache = {};
   function tubeColors(cidx, bin) {
     var key = cidx * 10 + bin;
@@ -452,13 +467,13 @@ button[aria-pressed="true"]{border-color:var(--orange);color:var(--orange)}
     }
     return colorCache[key];
   }
+  var PX = new Float32Array(4096), PY = new Float32Array(4096), PZ = new Float32Array(4096), PS = new Float32Array(4096);
 
   function render(t) {
     updateCamera(t);
-    var i, b, ctx;
+    var i, b, ctx, n;
     for (i = 0; i < NB; i++) BIN_CTX[i].clearRect(0, 0, W, H);
 
-    // Dust: the substrate as faint points. Rich voxels green, poor voxels a fainter purple.
     for (i = 0; i < dust.length; i++) {
       var du = dust[i]; project(du, pa); b = binOf(pa.z); ctx = BIN_CTX[b];
       var dv = du[3], r;
@@ -467,31 +482,39 @@ button[aria-pressed="true"]{border-color:var(--orange);color:var(--orange)}
       ctx.fillRect(pa.x - r / 2, pa.y - r / 2, r, r);
     }
 
-    // Hyphae as shaded tubes: a dark wide stroke, then a bright narrow core. Older hyphae thicken into cords.
+    // Hyphae: each strand is a smooth curve through the midpoints of its stored points, drawn as quadratic pieces.
+    // Pieces are grouped by depth bin, color step and width step so each group is two stroke calls (shade, core).
     var groups = {};
-    for (i = 0; i < segs.length; i++) {
-      var sg = segs[i]; project(sg.a, pa); project(sg.b, pb);
-      var bin = binOf((pa.z + pb.z) / 2), cidx = Math.round(sg.o * (COLOR_STEPS - 1));
-      var cord = 0.7 + 0.9 * smooth(0, 60, t - sg.t);
-      var w = (2.1 - 0.7 * sg.o) * cord * (pa.s + pb.s) / 2, widx = Math.max(1, Math.round(w * 2));
-      var key = bin * 1000 + cidx * 60 + widx;
-      var gl = groups[key] || (groups[key] = { bin: bin, c: cidx, w: widx / 2, pts: [] });
-      gl.pts.push(pa.x, pa.y, pb.x, pb.y);
+    for (var si = 0; si < strands.length; si++) {
+      var st = strands[si]; n = st.pts.length;
+      if (n < 2) continue;
+      if (n > PX.length) { PX = new Float32Array(n * 2); PY = new Float32Array(n * 2); PZ = new Float32Array(n * 2); PS = new Float32Array(n * 2); }
+      for (i = 0; i < n; i++) { project(st.pts[i], pa); PX[i] = pa.x; PY[i] = pa.y; PZ[i] = pa.z; PS[i] = pa.s; }
+      var x0 = PX[0], y0 = PY[0], cx, cy, x1, y1, j;
+      for (i = 1; i < n; i++) {
+        if (i < n - 1) { cx = PX[i]; cy = PY[i]; x1 = (PX[i] + PX[i + 1]) / 2; y1 = (PY[i] + PY[i + 1]) / 2; }
+        else { cx = (x0 + PX[i]) / 2; cy = (y0 + PY[i]) / 2; x1 = PX[i]; y1 = PY[i]; }
+        var bin = binOf(PZ[i]), cidx = Math.round(st.o[i] * (COLOR_STEPS - 1));
+        var cord = 0.7 + 0.9 * smooth(0, 60, t - st.t[i]);
+        var w = (1.4 + 0.6 * st.o[i]) * cord * PS[i], widx = Math.max(1, Math.round(w * 2)); // organic thicker, traces thinner
+        j = bin * 1000 + cidx * 60 + widx;
+        var gl = groups[j] || (groups[j] = { bin: bin, c: cidx, w: widx / 2, pts: [] });
+        gl.pts.push(x0, y0, cx, cy, x1, y1);
+        x0 = x1; y0 = y1;
+      }
     }
     var keys = Object.keys(groups).sort(function (x, y) { return groups[y].w - groups[x].w; });
-    var pass, kk;
-    for (pass = 0; pass < 2; pass++) {
-      for (kk = 0; kk < keys.length; kk++) {
+    for (var pass = 0; pass < 2; pass++) {
+      for (var kk = 0; kk < keys.length; kk++) {
         var gr = groups[keys[kk]]; ctx = BIN_CTX[gr.bin]; var tc = tubeColors(gr.c, gr.bin);
         ctx.strokeStyle = pass === 0 ? tc.shade : tc.core; ctx.lineWidth = pass === 0 ? gr.w : Math.max(0.5, gr.w * 0.42);
         ctx.beginPath();
         var P = gr.pts;
-        for (i = 0; i < P.length; i += 4) { ctx.moveTo(P[i], P[i + 1]); ctx.lineTo(P[i + 2], P[i + 3]); }
+        for (i = 0; i < P.length; i += 6) { ctx.moveTo(P[i], P[i + 1]); ctx.quadraticCurveTo(P[i + 2], P[i + 3], P[i + 4], P[i + 5]); }
         ctx.stroke();
       }
     }
 
-    // Marks: vias and pads on poor ground, buds and junctions on rich ground. Spores as faint rings on the edges.
     for (i = 0; i < marks.length; i++) {
       var m = marks[i]; project(m.p, pa); b = binOf(pa.z); ctx = BIN_CTX[b]; var c = mix(morphColor(m.o), BG, BIN_FOG[b]), rr = pa.s;
       if (m.k === 'via' || m.k === 'pad') {
@@ -508,10 +531,11 @@ button[aria-pressed="true"]{border-color:var(--orange);color:var(--orange)}
       project(spores[i], pa); b = binOf(pa.z); ctx = BIN_CTX[b];
       ctx.lineWidth = 1 * pa.s; ctx.strokeStyle = rgba(PURPLE, 0.5 * BIN_ALPHA[b]); ctx.beginPath(); ctx.arc(pa.x, pa.y, 3.5 * pa.s, 0, TAU); ctx.stroke();
     }
+    // Live tips: the tube simply ends. A short bright cap from the last stored point to the tip keeps growth visible without a dot.
     for (i = 0; i < tips.length; i++) {
-      var tp = tips[i]; project(tp.p, pa); b = binOf(pa.z); ctx = BIN_CTX[b]; var tcol = morphColor(tp.o);
-      ctx.fillStyle = rgba(tcol, 0.16); ctx.beginPath(); ctx.arc(pa.x, pa.y, 5.5 * pa.s, 0, TAU); ctx.fill();
-      ctx.fillStyle = rgba(mix(tcol, WHITE, 0.3), 0.95); ctx.beginPath(); ctx.arc(pa.x, pa.y, 1.6 * pa.s, 0, TAU); ctx.fill();
+      var tp = tips[i]; project(tp.last, pa); var lx = pa.x, ly = pa.y; project(tp.p, pa); b = binOf(pa.z); ctx = BIN_CTX[b];
+      ctx.strokeStyle = rgba(mix(morphColor(tp.o), WHITE, 0.3), 0.9 * BIN_ALPHA[b]); ctx.lineWidth = Math.max(0.6, 1.2 * pa.s);
+      ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(pa.x, pa.y); ctx.stroke();
     }
   }
 
@@ -519,7 +543,7 @@ button[aria-pressed="true"]{border-color:var(--orange);color:var(--orange)}
   function startGeneration() {
     var hsh = xmur3(seed + ':' + gen);
     rnd = mulberry32(hsh()); noise = makeNoise(rnd);
-    tips = []; segs = []; marks = []; hash = {}; joins = 0; phase = 'grow'; phaseT = 0; colorCache = {};
+    tips = []; strands = []; marks = []; hash = {}; joins = 0; pointCount = 0; phase = 'grow'; phaseT = 0; colorCache = {};
     buildBlock(); seedBlock();
     stage.classList.remove('fading');
     document.getElementById('seedTop').textContent = seed;
@@ -550,7 +574,7 @@ button[aria-pressed="true"]{border-color:var(--orange);color:var(--orange)}
   function ui(now) {
     if (now - lastUi < 0.25) return;
     lastUi = now;
-    tipN.textContent = String(tips.length); joinN.textContent = String(joins); segN.textContent = String(segs.length);
+    tipN.textContent = String(tips.length); joinN.textContent = String(joins); segN.textContent = String(pointCount);
     phaseWord.textContent = phase === 'grow' ? 'colonizing' : phase === 'hold' ? 'fully colonized' : 'fading';
     statLine.textContent = 'gen ' + gen + ' · ' + tips.length + ' tips · ' + (paused ? 'paused' : phase === 'grow' ? 'colonizing' : phase);
     if (!reduced) term.style.transform = 'translate3d(' + (-cur.x * 6).toFixed(2) + 'px,' + (-cur.y * 6).toFixed(2) + 'px,0)';
@@ -562,7 +586,7 @@ button[aria-pressed="true"]{border-color:var(--orange);color:var(--orange)}
     var dt = lastTs ? Math.min(0.05, (ts - lastTs) / 1000) : 0.016;
     lastTs = ts; frameN++;
     if (!paused) tick(dt);
-    if (segs.length < 8000 || frameN % 2 === 0) render(simTime);
+    if (pointCount < 8000 || frameN % 2 === 0) render(simTime);
     ui(simTime);
   }
 
@@ -584,7 +608,7 @@ button[aria-pressed="true"]{border-color:var(--orange);color:var(--orange)}
   resize();
   seed = seedFromHash() || todaySeed();
   startGeneration();
-  for (var w = 0; w < (reduced ? 1000 : 120); w++) tick(0.1);
+  for (var w = 0; w < (reduced ? 1200 : 120); w++) tick(0.1);
   requestAnimationFrame(frame);
 })();
 </script>
