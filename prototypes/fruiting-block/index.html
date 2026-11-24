@@ -148,7 +148,7 @@ button[aria-pressed="true"]{border-color:var(--orange);color:var(--orange)}
             <span>fusions<b id="joinN">0</b></span>
             <span>hyphae<b id="segN">0</b></span>
           </div>
-          <div class="note">A 28³ voxel block of nutrient. Spores on the block's edges grow inward. Tips extend at a rate set by local nutrient, branch laterally behind the tip, and steer away from existing hyphae (negative autotropism) so the colony spreads as a front. Rich voxels grow organic, poor voxels grow as traces.</div>
+          <div class="note">A 28³ voxel block of rich substrate with a few low-nutrient pockets. Spores on the block's edges grow inward. Tips extend at a rate set by local nutrient, branch laterally behind the tip, and steer away from existing hyphae so the colony spreads as a front. Pockets are slow to colonize and grow as traces.</div>
         </div>
       </div>
     </div>
@@ -221,6 +221,8 @@ button[aria-pressed="true"]{border-color:var(--orange);color:var(--orange)}
 
   // ---- tunables (world units: the block spans -1 to 1 on each axis) ---------------
   var N = 28;               // voxels per axis
+  var BASE_NUTRIENT = 0.55; // floor of the rich substrate; noise fills the range above it
+  var POCKETS_MIN = 3, POCKETS_MAX = 5; // low-nutrient pockets per generation
   var SPORES = 8;           // spores on the block's edges per generation
   var MAX_TIPS = 70;        // live tips cap
   var VMAX = 0.06;          // tip extension rate at saturating nutrient, world units per second
@@ -273,21 +275,21 @@ button[aria-pressed="true"]{border-color:var(--orange);color:var(--orange)}
   function buildBlock() {
     cell = 2 / N;
     field = new Float32Array(N * N * N); dep = new Float32Array(N * N * N); hyph = new Float32Array(N * N * N);
-    var hot = [], k = 3 + Math.floor(rnd() * 3), i, x, y, z, v, h, d2, lo = 1e9, hi = -1e9;
-    for (i = 0; i < k; i++) hot.push({ x: rnd() * 1.4 - 0.7, y: rnd() * 1.4 - 0.7, z: rnd() * 1.4 - 0.7, s: 0.22 + rnd() * 0.22, a: 0.6 + rnd() * 0.5 });
+    // A rich substrate throughout, with a few low-nutrient pockets that are hard to colonize.
+    var pockets = [], k = POCKETS_MIN + Math.floor(rnd() * (POCKETS_MAX - POCKETS_MIN + 1)), i, x, y, z, v, h, d2;
+    for (i = 0; i < k; i++) pockets.push({ x: rnd() * 1.5 - 0.75, y: rnd() * 1.5 - 0.75, z: rnd() * 1.5 - 0.75, s: 0.16 + rnd() * 0.18, a: 0.85 + rnd() * 0.13 });
     var zoff = gen * 3.7;
     for (var iz = 0; iz < N; iz++) for (var iy = 0; iy < N; iy++) for (var ix = 0; ix < N; ix++) {
       x = -1 + (ix + 0.5) * cell; y = -1 + (iy + 0.5) * cell; z = -1 + (iz + 0.5) * cell;
-      v = noise(x * 1.7 + zoff, y * 1.7, z * 1.7) * 0.6;
-      for (h = 0; h < hot.length; h++) { d2 = (x - hot[h].x) * (x - hot[h].x) + (y - hot[h].y) * (y - hot[h].y) + (z - hot[h].z) * (z - hot[h].z); v += hot[h].a * Math.exp(-d2 / (2 * hot[h].s * hot[h].s)) * 0.5; }
-      i = (iz * N + iy) * N + ix; field[i] = v; if (v < lo) lo = v; if (v > hi) hi = v;
+      v = BASE_NUTRIENT + (1 - BASE_NUTRIENT) * noise(x * 1.7 + zoff, y * 1.7, z * 1.7);
+      for (h = 0; h < pockets.length; h++) { d2 = (x - pockets[h].x) * (x - pockets[h].x) + (y - pockets[h].y) * (y - pockets[h].y) + (z - pockets[h].z) * (z - pockets[h].z); v *= 1 - pockets[h].a * Math.exp(-d2 / (2 * pockets[h].s * pockets[h].s)); }
+      i = (iz * N + iy) * N + ix; field[i] = clamp01(v);
     }
-    for (i = 0; i < field.length; i++) field[i] = Math.pow((field[i] - lo) / (hi - lo + 1e-6), 1.2);
-    // Dust: a sparse sample of voxels, weighted to rich ground, so the volume reads without a box.
+    // Dust: a sparse sample of voxels so the volume reads without a box. Pockets show as sparse purple.
     dust = [];
     for (iz = 0; iz < N; iz += 2) for (iy = 0; iy < N; iy += 2) for (ix = 0; ix < N; ix += 2) {
       v = field[(iz * N + iy) * N + ix];
-      if (rnd() < 0.25 + 0.7 * v) dust.push([-1 + (ix + 0.5) * cell + (rnd() - 0.5) * cell * 1.6, -1 + (iy + 0.5) * cell + (rnd() - 0.5) * cell * 1.6, -1 + (iz + 0.5) * cell + (rnd() - 0.5) * cell * 1.6, v]);
+      if (rnd() < 0.1 + 0.3 * v) dust.push([-1 + (ix + 0.5) * cell + (rnd() - 0.5) * cell * 1.6, -1 + (iy + 0.5) * cell + (rnd() - 0.5) * cell * 1.6, -1 + (iz + 0.5) * cell + (rnd() - 0.5) * cell * 1.6, v]);
     }
   }
   function sampleGrid(arr, x, y, z) {
