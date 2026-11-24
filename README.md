@@ -11,14 +11,15 @@ retired Jekyll site, including the old about page.
 | Path | Contents |
 |---|---|
 | `AGENTS.md` | Entry point for agent sessions: work mode, rules, where things live |
+| `docs/background-notes.md` | Tunables, critique log, ranked ideas, and the verification routine for the background |
 | `docs/design-brief.md` | The visual direction, color roles, type, motifs, information architecture, open questions |
 | `design/canvas/` | Exports of the design canvas artboards (`.dc.html`) and their index |
-| `prototypes/background/` | Standalone HTML motion prototype of the animated background and terminal overlay |
+| `prototypes/` | Standalone HTML motion prototypes: `background/` (v1), `substrate/` (v2, superseded), `fruiting-block/` (current) |
 | `plans/handoff.md` | Resume handoff for the next session |
 
 ## Prototype
 
-Open `prototypes/background/index.html` in a browser. It needs no build step.
+Open `prototypes/fruiting-block/index.html` in a browser. It needs no build step.
 The page loads JetBrains Mono from Google Fonts and runs on a 2D canvas. A seed
 in the URL hash (`index.html#7f3a`) replays one garden. With no hash, the seed
 is today's date.
