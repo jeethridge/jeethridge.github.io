@@ -1,2 +1,4 @@
-_site
-_posts/2014-01-01-example-content.md
+.DS_Store
+node_modules/
+dist/
+_site/
