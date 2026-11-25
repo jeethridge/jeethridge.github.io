@@ -454,13 +454,13 @@ function createSim(P, seed){
 
   // ---- tunables (world units are mm: the block spans -2..2, -1.5..1.5, -2..2) --------
   // site defaults. "copy as defaults" in the substrate tab prints these two lines with the saved settings.
-  // P holds the reference growth parameters, except inoculation, and growth controls change P live.
+  // P holds the reference growth parameters, except vmax, het, and inoculation. Growth controls change P live.
   // HOURS_PER_SEC: simulated hours per real second; about 60 h colonizes the block.
   // ZOOM: 1 fits the block to cover the frame on both axes at the base view; above 1 overfills.
   // SUBSTRATE: substrate opacity; light lost through the substrate dims and blurs hyphae deeper in the block.
   // COLOR_MODE: index into the `color hyphae by` select. ORBIT: slow self-orbit, off under reduced motion.
-  var P = { vmax: 0.25, beta: 1, angle: 62 * Math.PI / 180, lp: 1.2, auto: 2, chemo: 0.6, fuse: 0.5, het: 0.5, inoc: 'mixed' };
-  var HOURS_PER_SEC = 0.3, ZOOM = 1.1, SUBSTRATE = 0.3, COLOR_MODE = 0, SHOW_TIPS = true, ORBIT = true;
+  var P = { vmax: 0.26, beta: 1, angle: 62 * Math.PI / 180, lp: 1.2, auto: 2, chemo: 0.6, fuse: 0.5, het: 0.65, inoc: 'mixed' };
+  var HOURS_PER_SEC = 0.25, ZOOM = 2, SUBSTRATE = 0.51, COLOR_MODE = 0, SHOW_TIPS = true, ORBIT = true;
 
   var DT = 0.02;              // simulated hours per model step, as in the reference
   var WARMUP_H = 1;           // simulated hours grown before the first frame; short, so the grains show apart before they join

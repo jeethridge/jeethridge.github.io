@@ -45,16 +45,16 @@ What v4 changes is the renderer and the page:
   `SCATTER` pixels, so blur grows with depth in the substrate. At opacity 0,
   every hypha is sharp. There is no focal plane.
 - Camera: `ZOOM` 1 makes the block's projection cover the frame on both axes
-  at the base view. The default 1.1 overfills a little, so the view sits
-  inside the block.
+  at the base view. The default 2 is the wheel's maximum, so the view sits
+  well inside the block.
 - Camera control: no parallax. A drag on the background around the panel
   rotates the block, and the wheel there zooms between 0.4× and 2×. The zoom
   slider follows the wheel. The slow orbit pauses during a drag. Touch drag
   is not tested.
 - Inoculation: five spawn grains mixed through the block by default. On
-  today's seed they join at 4.8, 5.3, 6.6, and 8.1 simulated hours.
+  seed `20261125` they join at 5.0, 6.4, 7.0, and 8.3 simulated hours.
 - Warm-up: 1 simulated hour before the first frame, so the grains show
-  apart for about 13 s before the first join.
+  apart for about 16 s before the first join.
 - Substrate: dust points, green in rich ground and purple in poor ground.
   Dust fades as nutrient is consumed. There is no block outline and no
   ray-marched volume.
@@ -63,8 +63,8 @@ What v4 changes is the renderer and the page:
   point to the tip. Between model steps, each tip moves forward along its
   last step of motion. Without this, a strand grows in 0.04 mm chunks and
   stands still on most frames.
-- Timing: 0.3 simulated hours per second, so about three and a half minutes
-  per generation. Then hold 8 s, fade 14 s, and regrow from the next seed.
+- Timing: 0.25 simulated hours per second, so about four minutes per
+  generation. Then hold 8 s, fade 14 s, and regrow from the next seed.
 - Controls: tab `7 substrate` docks the panel left and exposes substrate
   opacity, zoom, speed, tips, orbit, the six growth parameters (live), and
   inoculation and patchiness (both restart the block). Tabs do not change
@@ -153,6 +153,7 @@ width formula `(1.4 + 0.6 * o) * cord`, and the cord growth `smooth(0, 60, age)`
 | 2026-11-25 | Seed growth from several spots, one color per subnetwork, and a color change when they connect. Keep the reference color modes, with this one as the default. Shorten the warm-up so the colors last longer | Mixed inoculation by default, connectivity color mode with join rings, `color hyphae by` select with five modes, warm-up 3 h to 1 h |
 | 2026-11-25 | Remove the parallax. Grab and rotate the block with the mouse, zoom with the wheel. Then: "much more comfortable than before" | Pointer tilt, idle drift, and panel shift removed. Drag rotates, wheel zooms |
 | 2026-11-25 | Save simulation settings across reloads, then promote favorites to the site defaults | Autosave to `localStorage` (only settings that differ from the defaults), reset button, "copy as defaults" snippet. Site defaults gathered into two lines |
+| 2026-11-25 | Promoted tuned settings to the site defaults | `vmax` 0.26, patchiness 65%, 0.25 h/s, zoom 2, substrate opacity 51% |
 
 The user's last word on v3: "a good start". On v4: "I like this".
 
