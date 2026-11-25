@@ -461,7 +461,7 @@ function createSim(P, seed){
   // COLOR_MODE: index into the `color hyphae by` select. ORBIT: slow self-orbit, off under reduced motion.
   // ORBIT_SPEED: degrees per second of slow self-orbit; 0 stops it.
   var P = { vmax: 0.26, beta: 1, angle: 62 * Math.PI / 180, lp: 1.2, auto: 2, chemo: 0.6, fuse: 0.5, het: 0.65, inoc: 'mixed' };
-  var HOURS_PER_SEC = 0.25, ZOOM = 2, SUBSTRATE = 0.51, COLOR_MODE = 0, SHOW_TIPS = true, ORBIT = true, ORBIT_SPEED = 2.9;
+  var HOURS_PER_SEC = 0.25, ZOOM = 2, SUBSTRATE = 0.51, COLOR_MODE = 0, SHOW_TIPS = true, ORBIT = true, ORBIT_SPEED = 1.1;
 
   var DT = 0.02;              // simulated hours per model step, as in the reference
   var WARMUP_H = 1;           // simulated hours grown before the first frame; short, so the grains show apart before they join
