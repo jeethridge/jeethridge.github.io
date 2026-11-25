@@ -547,7 +547,15 @@ function createSim(P, seed){
   var bDust = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, bDust); gl.bufferData(gl.ARRAY_BUFFER, NDUST * 12, gl.STATIC_DRAW);
   attrib(pDust, 'aPos', 3);
 
-  var MAXT = 7000, tipArr = new Float32Array(MAXT * 3);
+  // live heads: one ribbon per tip from its last committed point to the tip, refreshed every frame
+  var MAXT = 7000, headArr = new Float32Array(MAXT * 8);
+  var vaoHead = gl.createVertexArray(); gl.bindVertexArray(vaoHead);
+  gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer()); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([0, -1, 0, 1, 1, -1, 1, 1]), gl.STATIC_DRAW);
+  attrib(pHy, 'aCorner', 2);
+  var bHead = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, bHead); gl.bufferData(gl.ARRAY_BUFFER, headArr.byteLength, gl.DYNAMIC_DRAW);
+  attrib(pHy, 'aA', 4, 32, 0, 1); attrib(pHy, 'aB', 4, 32, 16, 1);
+
+  var tipArr = new Float32Array(MAXT * 3);
   var vaoTip = gl.createVertexArray(); gl.bindVertexArray(vaoTip);
   var bTip = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, bTip); gl.bufferData(gl.ARRAY_BUFFER, tipArr.byteLength, gl.DYNAMIC_DRAW);
   attrib(pTip, 'aPos', 3);
@@ -626,7 +634,7 @@ function createSim(P, seed){
   function startGeneration() {
     var h = xmur3(seed + ':' + gen);
     sim = createSim(P, h());
-    uploaded = 0; simDebt = 0; phase = 'grow'; phaseT = 0;
+    uploaded = 0; simDebt = 0; phase = 'grow'; phaseT = 0; prevPos.clear();
     gl.bindBuffer(gl.ARRAY_BUFFER, bSeg); gl.bufferData(gl.ARRAY_BUFFER, sim.dims.MAXSEG * 32, gl.DYNAMIC_DRAW);
     var dust = new Float32Array(NDUST * 3), r = h();
     for (var i = 0; i < dust.length; i += 3) {
@@ -641,11 +649,21 @@ function createSim(P, seed){
     $('seedTop').textContent = seed; $('seedBottom').textContent = seed; $('genN').textContent = String(gen);
   }
 
+  // tip positions before the latest step, by tip id; frames between steps project each tip forward by that motion
+  var prevPos = new Map();
+  function snapshotTips() {
+    var tips = sim.tips;
+    if (prevPos.size > tips.length * 2 + 64) prevPos.clear();
+    for (var i = 0; i < tips.length; i++) {
+      var t = tips[i], p = prevPos.get(t.id);
+      if (p) { p[0] = t.x; p[1] = t.y; p[2] = t.z; } else prevPos.set(t.id, [t.x, t.y, t.z]);
+    }
+  }
   function grow(hours, budgetMs) {
     simDebt += hours;
     var t0 = performance.now();
     while (simDebt >= DT && sim.tips.length) {
-      sim.step(DT); simDebt -= DT;
+      snapshotTips(); sim.step(DT); simDebt -= DT;
       if (performance.now() - t0 > budgetMs) { simDebt = Math.min(simDebt, DT * 2); break; }
     }
   }
@@ -701,9 +719,19 @@ function createSim(P, seed){
     gl.uniform1f(pHy.u.uTime, sim.st.time); gl.uniform1f(pHy.u.uYoung, YOUNG_H); gl.uniform1f(pHy.u.uAlpha, ALPHA);
     gl.bindVertexArray(vaoHy); gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, uploaded);
 
-    var n = Math.min(sim.tips.length, MAXT);
+    var n = Math.min(sim.tips.length, MAXT), f = Math.min(1, simDebt / DT), now = sim.st.time;
+    for (var k = 0; k < n; k++) {
+      var t = sim.tips[k], p = prevPos.get(t.id), ex = t.x, ey = t.y, ez = t.z, o = k * 8;
+      if (p) { ex += (t.x - p[0]) * f; ey += (t.y - p[1]) * f; ez += (t.z - p[2]) * f; }
+      headArr[o] = t.lx; headArr[o + 1] = t.ly; headArr[o + 2] = t.lz; headArr[o + 3] = now;
+      headArr[o + 4] = ex; headArr[o + 5] = ey; headArr[o + 6] = ez; headArr[o + 7] = t.order;
+      tipArr[k * 3] = ex; tipArr[k * 3 + 1] = ey; tipArr[k * 3 + 2] = ez;
+    }
+    if (n) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, bHead); gl.bufferSubData(gl.ARRAY_BUFFER, 0, headArr, 0, n * 8);
+      gl.bindVertexArray(vaoHead); gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, n);
+    }
     if (showTips && n) {
-      for (var k = 0; k < n; k++) { var t = sim.tips[k]; tipArr[k * 3] = t.x; tipArr[k * 3 + 1] = t.y; tipArr[k * 3 + 2] = t.z; }
       gl.bindBuffer(gl.ARRAY_BUFFER, bTip); gl.bufferSubData(gl.ARRAY_BUFFER, 0, tipArr, 0, n * 3);
       common(pTip); gl.uniform1f(pTip.u.uSize, TIP_PX * dpr);
       gl.bindVertexArray(vaoTip); gl.drawArrays(gl.POINTS, 0, n);

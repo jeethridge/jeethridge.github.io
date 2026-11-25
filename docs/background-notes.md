@@ -39,6 +39,10 @@ What v4 changes is the renderer and the page:
   Dust fades as nutrient is consumed. There is no block outline and no
   ray-marched volume.
 - Tips: small pink points.
+- Live heads: each frame draws one ribbon per tip, from its last committed
+  point to the tip. Between model steps, each tip moves forward along its
+  last step of motion. Without this, a strand grows in 0.04 mm chunks and
+  stands still on most frames.
 - Timing: 0.3 simulated hours per second, so about three and a half minutes
   per generation. Then hold 8 s, fade 14 s, and regrow from the next seed.
 - Controls: tab `7 substrate` docks the panel left and exposes substrate
