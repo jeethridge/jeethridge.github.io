@@ -30,7 +30,10 @@ main{position:relative;z-index:1;min-height:100%;box-sizing:border-box;display:f
   padding-block:40px;padding-left:max(16px, env(safe-area-inset-left,0px));padding-right:max(16px, env(safe-area-inset-right,0px))}
 .term{width:100%;max-width:1040px;min-width:0;border:1px solid var(--line);border-radius:6px;background:var(--panel);
   -webkit-backdrop-filter:blur(12px) saturate(1.15);backdrop-filter:blur(12px) saturate(1.15);
-  box-shadow:0 30px 80px rgba(0,0,0,.5), inset 0 1px 0 rgba(248,248,242,.04);overflow:hidden;will-change:transform}
+  box-shadow:0 30px 80px rgba(0,0,0,.5), inset 0 1px 0 rgba(248,248,242,.04);overflow:hidden;cursor:auto}
+/* the background around the panel turns the block: drag to rotate, wheel to zoom */
+main{cursor:grab}
+main.dragging{cursor:grabbing;user-select:none}
 
 .tabs{display:flex;flex-wrap:wrap;align-items:stretch;background:rgba(33,34,44,.85);border-bottom:1px solid var(--line);font-size:12.5px}
 .tabs a{padding:9px 16px;color:var(--fg);text-decoration:none;background:var(--line);border-right:1px solid var(--bg)}
@@ -453,7 +456,10 @@ function createSim(P, seed){
   var ZOOM = 1.1;             // 1 fits the block to cover the frame on both axes at the base view; above 1 overfills
   var BASE_YAW = 0.7, BASE_PITCH = 0.42;
   var IDLE_ORBIT = 0.05;      // radians per second of slow self-orbit
-  var POINTER_ORBIT = 0.35;   // radians of orbit from the pointer
+  var DRAG_RATE = 0.006;      // radians of rotation per CSS pixel of drag
+  var PITCH_LIMIT = 1.45;     // radians; the camera stops short of looking straight down or up
+  var WHEEL_RATE = 0.0006;    // zoom changes by exp(-deltaY * WHEEL_RATE) per wheel event
+  var ZOOM_MIN = 0.4, ZOOM_MAX = 2;
   var SUBSTRATE = 0.3;        // substrate opacity; light lost through the substrate dims and blurs hyphae deeper in the block
   var SCATTER = 5;            // blur in CSS pixels for a hypha whose light the substrate absorbs fully
   var ALPHA = 0.7;            // hypha opacity at the near face
@@ -655,7 +661,7 @@ function createSim(P, seed){
   // ---- state --------------------------------------------------------------------------
   var sim = null, uploaded = 0, seed, gen = 1, phase = 'grow', phaseT = 0, simDebt = 0;
   var paused = false, hidden = false, orbitOn = !reduced, orbitYaw = 0;
-  var target = { x: 0, y: 0 }, cur = { x: 0, y: 0 }, clock = 0, lastPointer = -1e9;
+  var dragPitch = 0, drag = null, clock = 0;
   var stage = $('stage'), term = $('term');
 
   function startGeneration() {
@@ -818,12 +824,9 @@ function createSim(P, seed){
     return dpr;
   }
   function draw() {
-    if (!reduced) {
-      if (clock - lastPointer > 3) { target.x = Math.sin(clock * 0.045) * 0.5; target.y = Math.cos(clock * 0.033) * 0.35; }
-      cur.x += (target.x - cur.x) * 0.03; cur.y += (target.y - cur.y) * 0.03;
-    }
     var dpr = resize(), W = canvas.width, H = canvas.height, aspect = W / H, dist = fitDist(aspect);
-    var vp = matVP(aspect, BASE_YAW + orbitYaw + cur.x * POINTER_ORBIT, BASE_PITCH + cur.y * POINTER_ORBIT * 0.6, dist);
+    var pitch = Math.max(-PITCH_LIMIT, Math.min(PITCH_LIMIT, BASE_PITCH + dragPitch));
+    var vp = matVP(aspect, BASE_YAW + orbitYaw, pitch, dist);
     var o = Math.min(SUBSTRATE, 0.999), sigma = 0.4 * o / (1 - o);
 
     if (sim.st.nseg > uploaded) {
@@ -889,7 +892,6 @@ function createSim(P, seed){
     var word = phase === 'grow' ? 'colonizing' : phase === 'hold' ? 'growth stopped' : 'fading';
     $('phaseWord').textContent = word;
     $('statLine').textContent = 'gen ' + gen + ' · ' + st.time.toFixed(1) + ' h · ' + fmtLen(st.totalLen) + ' of hyphae · ' + (paused ? 'paused' : word);
-    if (!reduced) term.style.transform = 'translate3d(' + (-cur.x * 6).toFixed(2) + 'px,' + (-cur.y * 6).toFixed(2) + 'px,0)';
   }
   var lastT = 0;
   function frame(now) {
@@ -899,14 +901,34 @@ function createSim(P, seed){
     lastT = now; clock += dt; frameN++;
     if (!paused) {
       advance(dt);
-      if (orbitOn) orbitYaw += IDLE_ORBIT * dt;
+      if (orbitOn && !drag) orbitYaw += IDLE_ORBIT * dt;
       if (frameN % 10 === 0) uploadNut();
     }
     easeColors(dt);
     draw(); ui();
   }
 
-  window.addEventListener('pointermove', function (e) { target.x = e.clientX / window.innerWidth - 0.5; target.y = e.clientY / window.innerHeight - 0.5; lastPointer = clock; }, { passive: true });
+  // drag on the background around the panel to rotate the block, and turn the wheel there to zoom
+  var mainEl = document.querySelector('main');
+  function onBackground(e) { return !term.contains(e.target); }
+  mainEl.addEventListener('pointerdown', function (e) {
+    if (e.button !== 0 || !onBackground(e)) return;
+    drag = { id: e.pointerId, x: e.clientX, y: e.clientY };
+    mainEl.setPointerCapture(e.pointerId); mainEl.classList.add('dragging');
+  });
+  mainEl.addEventListener('pointermove', function (e) {
+    if (!drag || e.pointerId !== drag.id) return;
+    orbitYaw -= (e.clientX - drag.x) * DRAG_RATE;
+    dragPitch = Math.max(-PITCH_LIMIT - BASE_PITCH, Math.min(PITCH_LIMIT - BASE_PITCH, dragPitch + (e.clientY - drag.y) * DRAG_RATE));
+    drag.x = e.clientX; drag.y = e.clientY;
+  });
+  function endDrag(e) { if (drag && e.pointerId === drag.id) { drag = null; mainEl.classList.remove('dragging'); } }
+  mainEl.addEventListener('pointerup', endDrag); mainEl.addEventListener('pointercancel', endDrag);
+  mainEl.addEventListener('wheel', function (e) {
+    if (!onBackground(e)) return;
+    e.preventDefault();
+    setZoom(ZOOM * Math.exp(-e.deltaY * WHEEL_RATE));
+  }, { passive: false });
   $('regrow').addEventListener('click', function () {
     seed = randomSeed(); gen = 1;
     try { history.replaceState(null, '', '#' + seed); } catch (e) {}
@@ -941,6 +963,10 @@ function createSim(P, seed){
     el.addEventListener('input', function () { c[1](+el.value); out.textContent = c[2](+el.value); });
   });
   $('c-het').addEventListener('change', restartBlock);
+  function setZoom(z) {
+    ZOOM = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, z));
+    var el = $('c-zoom'); el.value = ZOOM; el.parentNode.querySelector('output').textContent = controls.zoom[2](ZOOM);
+  }
   $('c-inoc').value = P.inoc;
   $('c-inoc').addEventListener('change', function (e) { P.inoc = e.target.value; restartBlock(); });
   function setColor(m) { colorMode = m; $('c-color').value = String(m); $('colorNote').textContent = COLOR_NOTE[m]; }

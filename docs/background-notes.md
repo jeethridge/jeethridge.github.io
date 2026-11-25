@@ -47,6 +47,10 @@ What v4 changes is the renderer and the page:
 - Camera: `ZOOM` 1 makes the block's projection cover the frame on both axes
   at the base view. The default 1.1 overfills a little, so the view sits
   inside the block.
+- Camera control: no parallax. A drag on the background around the panel
+  rotates the block, and the wheel there zooms between 0.4× and 2×. The zoom
+  slider follows the wheel. The slow orbit pauses during a drag. Touch drag
+  is not tested.
 - Inoculation: five spawn grains mixed through the block by default. On
   today's seed they join at 4.8, 5.3, 6.6, and 8.1 simulated hours.
 - Warm-up: 1 simulated hour before the first frame, so the grains show
@@ -138,6 +142,7 @@ width formula `(1.4 + 0.6 * o) * cord`, and the cord growth `smooth(0, 60, age)`
 | 2026-11-25 | Likes v4. Expose controls in a tab, slower, spawn on the top face, zoom in so the block is slightly larger than the frame, blur should follow depth in the substrate | Substrate tab, 0.3 h/s, top inoculation, cover-fit zoom 1.1, scattering blur set by substrate opacity in place of defocus |
 
 | 2026-11-25 | Seed growth from several spots, one color per subnetwork, and a color change when they connect. Keep the reference color modes, with this one as the default. Shorten the warm-up so the colors last longer | Mixed inoculation by default, connectivity color mode with join rings, `color hyphae by` select with five modes, warm-up 3 h to 1 h |
+| 2026-11-25 | Remove the parallax. Grab and rotate the block with the mouse, zoom with the wheel. Then: "much more comfortable than before" | Pointer tilt, idle drift, and panel shift removed. Drag rotates, wheel zooms |
 
 The user's last word on v3: "a good start". On v4: "I like this".
 
