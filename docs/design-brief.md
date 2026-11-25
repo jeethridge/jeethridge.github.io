@@ -183,6 +183,7 @@ Reduced-motion users get one fully grown network, no fade, no parallax.
 | 2026-11-25 | No parallax in v4. The visitor drags the background to rotate the block and uses the wheel to zoom | The user asked for direct control. The pointer-driven tilt and drift moved the block without intent. |
 | 2026-11-25 | Substrate tab settings autosave to `localStorage`, not a cookie. Only settings that differ from the site defaults are stored. The URL hash keeps the seed only. Camera rotation is not saved. "copy as defaults" prints the two site-default lines for promotion | The user asked to keep tuned settings across reloads. A cookie goes to the server with every request. Storing only the differences lets new site defaults reach keys the visitor never changed. |
 | 2026-11-25 | Site defaults from the user's tuning: tip extension 0.26 mm/h, patchiness 65%, 0.25 simulated hours per second, zoom 2, substrate opacity 51% | The user tuned these in the substrate tab and promoted them with "copy as defaults". Supersedes zoom 1.1 and 0.3 simulated hours per second. |
+| 2026-11-25 | The substrate tab sets orbit speed with a slider, 0 to 10°/s, in place of the orbit checkbox. The footer `orbit` button stays the on/off toggle | The user asked for a control to make the orbit slower. |
 | 2026-11-25 | Spawn grains on the cube faces wait for a model change | Placement lives inside the model block, which stays byte-identical to the reference. Mixed grains come first. |
 
 ## Open questions

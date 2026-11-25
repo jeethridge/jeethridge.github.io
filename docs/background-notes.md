@@ -66,7 +66,7 @@ What v4 changes is the renderer and the page:
 - Timing: 0.25 simulated hours per second, so about four minutes per
   generation. Then hold 8 s, fade 14 s, and regrow from the next seed.
 - Controls: tab `7 substrate` docks the panel left and exposes substrate
-  opacity, zoom, speed, tips, orbit, the six growth parameters (live), and
+  opacity, zoom, speed, orbit speed, tips, the six growth parameters (live), and
   inoculation and patchiness (both restart the block). Tabs do not change
   the URL hash, because the hash holds the seed.
 - Saved settings: each change in the tab saves to `localStorage` under
@@ -154,6 +154,7 @@ width formula `(1.4 + 0.6 * o) * cord`, and the cord growth `smooth(0, 60, age)`
 | 2026-11-25 | Remove the parallax. Grab and rotate the block with the mouse, zoom with the wheel. Then: "much more comfortable than before" | Pointer tilt, idle drift, and panel shift removed. Drag rotates, wheel zooms |
 | 2026-11-25 | Save simulation settings across reloads, then promote favorites to the site defaults | Autosave to `localStorage` (only settings that differ from the defaults), reset button, "copy as defaults" snippet. Site defaults gathered into two lines |
 | 2026-11-25 | Promoted tuned settings to the site defaults | `vmax` 0.26, patchiness 65%, 0.25 h/s, zoom 2, substrate opacity 51% |
+| 2026-11-25 | A control for orbit speed in place of the checkbox, to make the orbit slower | `orbit speed` slider, 0 to 10°/s, default 2.9°/s (the former 0.05 rad/s). 0 stops the orbit. The footer `orbit` button stays the on/off toggle. `ORBIT_SPEED` joins the site-default line |
 
 The user's last word on v3: "a good start". On v4: "I like this".
 

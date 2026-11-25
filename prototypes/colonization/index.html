@@ -134,7 +134,7 @@ details b{color:var(--cyan);font-weight:500}
               <option value="4">branch order</option>
             </select></label>
           <label class="check"><input id="c-tips" type="checkbox"> mark growing tips</label>
-          <label class="check"><input id="c-orbit" type="checkbox"> orbit slowly</label>
+          <label class="row"><span>orbit speed</span><output></output><input id="c-orbitSpeed" type="range" min="0" max="10" step="0.1"></label>
         </fieldset>
         <fieldset>
           <legend>hyphal growth · live</legend>
@@ -459,8 +459,9 @@ function createSim(P, seed){
   // ZOOM: 1 fits the block to cover the frame on both axes at the base view; above 1 overfills.
   // SUBSTRATE: substrate opacity; light lost through the substrate dims and blurs hyphae deeper in the block.
   // COLOR_MODE: index into the `color hyphae by` select. ORBIT: slow self-orbit, off under reduced motion.
+  // ORBIT_SPEED: degrees per second of slow self-orbit; 0 stops it.
   var P = { vmax: 0.26, beta: 1, angle: 62 * Math.PI / 180, lp: 1.2, auto: 2, chemo: 0.6, fuse: 0.5, het: 0.65, inoc: 'mixed' };
-  var HOURS_PER_SEC = 0.25, ZOOM = 2, SUBSTRATE = 0.51, COLOR_MODE = 0, SHOW_TIPS = true, ORBIT = true;
+  var HOURS_PER_SEC = 0.25, ZOOM = 2, SUBSTRATE = 0.51, COLOR_MODE = 0, SHOW_TIPS = true, ORBIT = true, ORBIT_SPEED = 2.9;
 
   var DT = 0.02;              // simulated hours per model step, as in the reference
   var WARMUP_H = 1;           // simulated hours grown before the first frame; short, so the grains show apart before they join
@@ -468,7 +469,6 @@ function createSim(P, seed){
   var HOLD = 8, FADE = 14;    // seconds
   var FOV = 40 * Math.PI / 180;
   var BASE_YAW = 0.7, BASE_PITCH = 0.42;
-  var IDLE_ORBIT = 0.05;      // radians per second of slow self-orbit
   var DRAG_RATE = 0.006;      // radians of rotation per CSS pixel of drag
   var PITCH_LIMIT = 1.45;     // radians; the camera stops short of looking straight down or up
   var WHEEL_RATE = 0.0006;    // zoom changes by exp(-deltaY * WHEEL_RATE) per wheel event
@@ -913,7 +913,7 @@ function createSim(P, seed){
     lastT = now; clock += dt; frameN++;
     if (!paused) {
       advance(dt);
-      if (orbitOn && !drag) orbitYaw += IDLE_ORBIT * dt;
+      if (orbitOn && !drag) orbitYaw += orbitSpeed * Math.PI / 180 * dt;
       if (frameN % 10 === 0) uploadNut();
     }
     easeColors(dt);
@@ -950,10 +950,9 @@ function createSim(P, seed){
   });
   var pauseBtn = $('pause');
   pauseBtn.addEventListener('click', function () { paused = !paused; pauseBtn.textContent = paused ? 'resume' : 'pause'; pauseBtn.setAttribute('aria-pressed', paused ? 'true' : 'false'); });
-  var orbitBtn = $('orbit'), orbitBox = $('c-orbit');
-  function setOrbit(on) { orbitOn = on; orbitBtn.setAttribute('aria-pressed', on ? 'true' : 'false'); orbitBox.checked = on; }
+  var orbitBtn = $('orbit'), orbitSpeed = ORBIT_SPEED;
+  function setOrbit(on) { orbitOn = on; orbitBtn.setAttribute('aria-pressed', on ? 'true' : 'false'); }
   orbitBtn.addEventListener('click', function () { setOrbit(!orbitOn); save(); });
-  orbitBox.addEventListener('change', function () { setOrbit(orbitBox.checked); save(); });
 
   // ---- substrate tab ------------------------------------------------------------------
   function restartBlock() { startGeneration(); if (!reduced) grow(WARMUP_H, 1e9); }
@@ -962,6 +961,7 @@ function createSim(P, seed){
     opacity: [function () { return SUBSTRATE * 100; }, function (v) { SUBSTRATE = v / 100; }, function (v) { return Math.round(v) + '%'; }],
     zoom: [function () { return ZOOM; }, function (v) { ZOOM = v; }, function (v) { return v.toFixed(2) + '×'; }],
     speed: [function () { return HOURS_PER_SEC; }, function (v) { HOURS_PER_SEC = v; }, function (v) { return v.toFixed(2) + ' h/s'; }],
+    orbitSpeed: [function () { return orbitSpeed; }, function (v) { orbitSpeed = v; }, function (v) { return v.toFixed(1) + '°/s'; }],
     vmax: [function () { return P.vmax; }, function (v) { P.vmax = v; }, function (v) { return v.toFixed(2) + ' mm/h'; }],
     beta: [function () { return P.beta; }, function (v) { P.beta = v; }, function (v) { return v.toFixed(2) + ' /h'; }],
     angle: [function () { return P.angle / DEG; }, function (v) { P.angle = v * DEG; }, function (v) { return Math.round(v) + '°'; }],
@@ -1003,7 +1003,8 @@ function createSim(P, seed){
     opacity: [function () { return r4(SUBSTRATE); }, function (v) { SUBSTRATE = v; }],
     color: [function () { return colorMode; }, function (v) { setColor(v); }],
     tips: [function () { return showTips; }, function (v) { showTips = v; }],
-    orbit: [function () { return orbitOn; }, function (v) { setOrbit(v && !reduced); }]
+    orbit: [function () { return orbitOn; }, function (v) { setOrbit(v && !reduced); }],
+    orbitSpeed: [function () { return r4(orbitSpeed); }, function (v) { orbitSpeed = v; }]
   };
   var SITE = {};
   Object.keys(settings).forEach(function (k) { SITE[k] = settings[k][0](); });
@@ -1052,7 +1053,7 @@ function createSim(P, seed){
       ', lp: ' + r4(P.lp) + ', auto: ' + r4(P.auto) + ', chemo: ' + r4(P.chemo) + ', fuse: ' + r4(P.fuse) + ', het: ' + r4(P.het) +
       ", inoc: '" + P.inoc + "' };\n" +
       '  var HOURS_PER_SEC = ' + r4(HOURS_PER_SEC) + ', ZOOM = ' + Math.round(ZOOM * 100) / 100 + ', SUBSTRATE = ' + r4(SUBSTRATE) +
-      ', COLOR_MODE = ' + colorMode + ', SHOW_TIPS = ' + showTips + ', ORBIT = ' + orbitOn + ';\n';
+      ', COLOR_MODE = ' + colorMode + ', SHOW_TIPS = ' + showTips + ', ORBIT = ' + orbitOn + ', ORBIT_SPEED = ' + r4(orbitSpeed) + ';\n';
   }
   $('c-reset').addEventListener('click', function () {
     var restart = P.inoc !== SITE.inoc || settings.het[0]() !== SITE.het;
