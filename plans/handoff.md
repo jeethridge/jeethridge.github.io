@@ -1,13 +1,13 @@
 # Resume handoff: site design
 
-Written 2026-11-24 for a fresh session with no prior context.
+Written 2026-11-25 for a fresh session with no prior context.
 
 ## Objective of the next session
 
-Tune the background prototype `prototypes/fruiting-block/index.html` until
-the user says it is right, then start the foreground. The user's standing
-critique and the ranked ideas are in `docs/background-notes.md`. Read that
-file and `docs/design-brief.md` before touching code.
+The background is at a checkpoint the user likes: v4,
+`prototypes/colonization/index.html`. Take further background critiques if
+the user has any, then start the foreground. Read `docs/design-brief.md` and
+`docs/background-notes.md` before touching code.
 
 ## Branch state
 
@@ -17,13 +17,17 @@ file and `docs/design-brief.md` before touching code.
   remote default branch is still `master`.
 - `planning/site-design`: all design work. Pushed, tracking
   `origin/planning/site-design`. Nothing uncommitted.
-- Tags, both pushed: `legacy-jekyll-2015` (the retired Jekyll site) and
-  `checkpoint-2026-11-24-pockets` (the fruiting block before the smoothing
-  pass).
-- Published copies: fruiting block
+- Tags, all pushed: `legacy-jekyll-2015` (the retired Jekyll site),
+  `checkpoint-2026-11-24-pockets` (v3 before the smoothing pass), and
+  `checkpoint-2026-11-25-colonization` (v4 at this handoff).
+- Harness: the repo is a target of the `hjp` workspace
+  (`~/harnesses/hjp`). Its `.harness` link and `CLAUDE.local.md` stay out of
+  this repo's history. The reference model lives in that workspace at
+  `initiatives/personal-site/docs/design/mycelium-colonization-3d.html`.
+- Published copies: v3 fruiting block
   https://claude.ai/artifact/ABsSSFFQttPcM38vC4qP1S, design canvas
-  https://claude.ai/artifact/TRuAqofEhxja5YHQSnxniR. The artifact copy is a
-  convenience. The repo file is the source.
+  https://claude.ai/artifact/TRuAqofEhxja5YHQSnxniR. v4 has no published
+  copy. The repo file is the source.
 
 ## Resume commands
 
@@ -33,7 +37,7 @@ git checkout planning/site-design
 git pull
 git status --short --branch
 git log --oneline -8
-xdg-open prototypes/fruiting-block/index.html
+xdg-open prototypes/colonization/index.html
 ```
 
 `git status` must print a clean tree on `planning/site-design`.
@@ -41,16 +45,24 @@ xdg-open prototypes/fruiting-block/index.html
 ## Editing and checking the prototype
 
 The prototype is one standalone HTML file. Edit it in place. After an edit,
-extract the script and syntax-check it:
+run these three checks:
 
-```sh
-node -e 'const fs=require("fs");const s=fs.readFileSync("prototypes/fruiting-block/index.html","utf8");fs.writeFileSync("/tmp/fb.js",s.match(/<script>([\s\S]*?)<\/script>/)[1]);' && node --check /tmp/fb.js
-```
+1. Model unchanged. This `diff` must print nothing:
+   ```sh
+   diff <(sed -n '/SIM-BEGIN/,/SIM-END/p' ~/harnesses/hjp/initiatives/personal-site/docs/design/mycelium-colonization-3d.html) \
+        <(sed -n '/SIM-BEGIN/,/SIM-END/p' prototypes/colonization/index.html)
+   ```
+2. Syntax:
+   ```sh
+   node -e 'const fs=require("fs");const s=fs.readFileSync("prototypes/colonization/index.html","utf8");fs.writeFileSync("/tmp/v4.js",s.match(/<script>([\s\S]*?)<\/script>/)[1]);' && node --check /tmp/v4.js
+   ```
+3. Render: open the file in a browser and follow "How to verify a change" in
+   `docs/background-notes.md`. For a headless check, Playwright's cached
+   Chromium is at `~/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome`.
+   Launch it with `--use-angle=swiftshader` for WebGL 2.
 
-Then open the file in a browser and follow "How to verify a change" in
-`docs/background-notes.md`. Commit each accepted change as a checkpoint with
-a conventional-commit subject. Push the branch at the end of the session
-with the user's confirmation.
+Commit each accepted change as a checkpoint with a conventional-commit
+subject. Push at the end of the session with the user's confirmation.
 
 ## Nothing half-finished
 
@@ -59,12 +71,14 @@ Every item below is done or not started. No partial edits exist.
 Done:
 - Design brief with fixed Dracula roles and recorded decisions.
 - Five design canvas artboards exported to `design/canvas/`.
-- Background prototype v1 (2-D layers, checkpoint) and v2 (superseded).
-- Background prototype v3, the fruiting block, through the smoothing pass.
-- Background notes with tunables, critique log, ranked ideas, verification.
+- Background prototypes v1 to v3 (checkpoints).
+- Background v4: the reference model in a Dracula WebGL 2 renderer, the
+  `7 substrate` controls tab, top-face spawn, cover-fit zoom, blur from
+  depth in the substrate, and live hyphal heads for smooth growth.
 
 Not started:
-- Further background tuning against the user's critiques.
+- Moving the model into a Web Worker. Do it only if the user sees hitches
+  late in a generation. One model step costs up to about 5 ms.
 - Foreground: navigation, section pages, content, mark as favicon.
 - Static site generator choice and scaffold.
 - Hosting and DNS. The domain is parked at Namecheap.
@@ -72,8 +86,10 @@ Not started:
 ## Hard constraints carried forward
 
 - `docs/design-brief.md` holds the decisions. Do not reopen palette, type,
-  the roguelite-in-structure call, or the 3-D simulation direction without a
-  new recorded decision.
+  the roguelite-in-structure call, the 3-D simulation direction, or the
+  reference model without a new recorded decision.
+- The model code between `// SIM-BEGIN` and `// SIM-END` stays
+  byte-identical to the reference. Visual changes go in the renderer.
 - Facts come from `~/projects/curriculum-vitae`. This repo copies none.
 - No push and no PR without the user's confirmation in the session. A push
   of `main` can replace the live GitHub Pages content, if Pages is enabled.
@@ -83,16 +99,13 @@ Not started:
 
 ## Next actions, ordered
 
-1. Open the prototype and ask the user for one word each on: jumble, kinks,
-   and whether a pocket's organic-to-circuit transformation reads.
-2. Apply the first ranked idea that matches the critique from
-   `docs/background-notes.md`. Verify. Commit as a checkpoint.
-3. Repeat step 2 until the user says the background is right. Record each
-   accepted change in the critique log and the decisions table.
-4. Decide open question 1 in the brief (code block or prose) and record it.
-5. Decide the static site generator (open question 2) and scaffold it on
+1. Ask the user whether the v4 background needs more tuning. Known open
+   items: the controls panel overflows a 900 px-tall window, and a mature
+   colony is bright behind the home panel.
+2. Decide open question 1 in the brief (code block or prose) and record it.
+3. Decide the static site generator (open question 2) and scaffold it on
    this branch.
-6. Build the foreground sections in the order listed at the end of
+4. Build the foreground sections in the order listed at the end of
    `docs/background-notes.md`.
-7. On a later push, with the user's confirmation, set the GitHub default
+5. On a later push, with the user's confirmation, set the GitHub default
    branch to `main`.
