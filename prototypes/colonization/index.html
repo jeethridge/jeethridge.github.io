@@ -1,0 +1,678 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Colonization</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&display=swap">
+<style>
+/* Layout: the reference colonization model drawn in WebGL 2 behind one translucent terminal panel. */
+:root{
+  --bg:#282A36; --bg-deep:#15161D; --bg-lift:#2C2E3B;
+  --panel:rgba(33,34,44,0.74); --line:#44475A; --fg:#F8F8F2; --dim:#9AA3C9; --comment:#6272A4;
+  --purple:#BD93F9; --cyan:#8BE9FD; --green:#50FA7B; --orange:#FFB86C; --pink:#FF79C6; --red:#FF5555;
+  --mono:'JetBrains Mono', ui-monospace, 'Cascadia Mono', Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--mono);font-size:14px;line-height:1.55;overflow-x:hidden}
+*:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+
+#bg{position:fixed;inset:0;z-index:0;overflow:hidden;
+  background:radial-gradient(ellipse 70% 65% at 50% 46%, var(--bg-lift) 0%, var(--bg) 48%, var(--bg-deep) 100%);}
+#stage{position:absolute;inset:0;transition:opacity 1.6s ease}
+#stage.fading{transition:opacity 14s ease-in;opacity:0}
+#stage.hidden{opacity:0;transition:none}
+#stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+
+main{position:relative;z-index:1;min-height:100%;box-sizing:border-box;display:flex;align-items:center;justify-content:center;
+  padding-block:40px;padding-left:max(16px, env(safe-area-inset-left,0px));padding-right:max(16px, env(safe-area-inset-right,0px))}
+.term{width:100%;max-width:1040px;min-width:0;border:1px solid var(--line);border-radius:6px;background:var(--panel);
+  -webkit-backdrop-filter:blur(12px) saturate(1.15);backdrop-filter:blur(12px) saturate(1.15);
+  box-shadow:0 30px 80px rgba(0,0,0,.5), inset 0 1px 0 rgba(248,248,242,.04);overflow:hidden;will-change:transform}
+
+.tabs{display:flex;flex-wrap:wrap;align-items:stretch;background:rgba(33,34,44,.85);border-bottom:1px solid var(--line);font-size:12.5px}
+.tabs a{padding:9px 16px;color:var(--fg);text-decoration:none;background:var(--line);border-right:1px solid var(--bg)}
+.tabs a[aria-current="page"]{background:var(--fg);color:var(--bg);font-weight:500}
+.tabs a:hover{color:var(--cyan)}
+.tabs a[aria-current="page"]:hover{color:var(--bg)}
+.tabs .meta{margin-left:auto;display:flex;flex-wrap:wrap;gap:16px;align-items:center;padding:0 16px;color:var(--dim)}
+.tabs .meta b{color:var(--orange);font-weight:500}
+
+.body{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:32px;padding:32px 36px 24px}
+@media (max-width:860px){.body{grid-template-columns:minmax(0,1fr);gap:22px;padding:24px 20px 20px}}
+.col{display:flex;flex-direction:column;gap:14px;min-width:0}
+.prompt{font-size:13px;color:var(--dim)}
+.prompt .tilde{color:var(--green)}.prompt .chev{color:var(--pink)}
+h1{margin:0;font-size:clamp(34px,5vw,56px);line-height:1;font-weight:700;letter-spacing:-.03em;text-wrap:balance}
+h1 .cursor{color:var(--pink);animation:blink 1.2s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.tag{margin:0;font-style:italic;font-size:clamp(16px,2.2vw,21px);color:var(--cyan)}
+pre{margin:0;padding:14px 16px;border:1px solid var(--line);border-radius:4px;background:rgba(33,34,44,.7);font-family:inherit;font-size:13px;line-height:1.6;overflow-x:auto;min-width:0}
+.k{color:var(--purple)}.ty{color:var(--cyan)}.s{color:var(--green)}.n{color:var(--orange)}.op{color:var(--pink)}.c{color:var(--comment)}
+p.lede{margin:0;max-width:60ch;color:#D8DAE3}
+.nav{display:flex;flex-wrap:wrap;gap:8px}
+.nav a{padding:8px 12px;border:1px solid var(--line);border-radius:4px;color:var(--fg);text-decoration:none;font-size:13px}
+.nav a.primary{border-color:var(--purple);color:var(--purple)}
+.nav a.cv{color:var(--orange)}
+.nav a:hover{border-color:var(--cyan);color:var(--cyan)}
+
+.card{display:flex;flex-direction:column;gap:8px;padding:14px 16px;border:1px solid var(--line);border-radius:4px;background:rgba(33,34,44,.7);min-width:0}
+.card h2{margin:0;font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);display:flex;justify-content:space-between;gap:12px}
+.card h2 .live{color:var(--green)}
+.log{display:grid;grid-template-columns:64px minmax(0,1fr);gap:2px 14px;font-size:12.5px;color:#D8DAE3}
+.log .t{color:var(--dim)}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;font-size:11.5px;color:var(--dim)}
+.stats b{display:block;font-size:18px;font-weight:500;color:var(--fg);font-variant-numeric:tabular-nums}
+.note{color:var(--comment);font-size:11px}
+
+.foot{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;justify-content:space-between;padding:12px 36px 14px;border-top:1px solid var(--line);font-size:12px;color:var(--dim)}
+@media (max-width:860px){.foot{padding:12px 20px}}
+.foot .seed b{color:var(--orange);font-weight:500}
+.ctl{display:flex;gap:8px;align-items:center}
+button{font:inherit;font-size:12px;padding:5px 10px;border:1px solid var(--line);border-radius:4px;background:transparent;color:var(--fg);cursor:pointer;min-height:32px}
+button:hover{border-color:var(--cyan);color:var(--cyan)}
+button.go{color:var(--green);border-color:rgba(80,250,123,.5)}
+button[aria-pressed="true"]{border-color:var(--orange);color:var(--orange)}
+@media (prefers-reduced-motion: reduce){h1 .cursor{animation:none}#stage{transition:none}}
+</style>
+
+<div id="bg" aria-hidden="true">
+  <div id="stage"><canvas id="gl"></canvas></div>
+</div>
+
+<main>
+  <div class="term" id="term">
+    <nav class="tabs" aria-label="Site sections">
+      <a href="#tab-home" aria-current="page">1 home</a>
+      <a href="#tab-runlog">2 run-log</a>
+      <a href="#tab-tree">3 tech-tree</a>
+      <a href="#tab-notebook">4 notebook</a>
+      <a href="#tab-projects">5 projects</a>
+      <a href="#tab-colophon">6 colophon</a>
+      <div class="meta"><span>jamesethridge.com</span><span>seed <b id="seedTop">…</b></span></div>
+    </nav>
+
+    <div class="body">
+      <div class="col">
+        <div class="prompt"><span class="tilde">~</span> <span class="chev">❯</span> whoami</div>
+        <h1>James Ethridge<span class="cursor">_</span></h1>
+        <p class="tag">infrastructure that grows research.</p>
+<pre><span class="k">let</span> james <span class="op">=</span> <span class="ty">Engineer</span> {
+  role:  <span class="s">"Staff Software Engineer, Infrastructure"</span>,
+  runs:  <span class="n">4</span>,
+  focus: [<span class="s">"platform"</span>, <span class="s">"data"</span>, <span class="s">"ml-infra"</span>],
+  users: <span class="s">"scientists and engineers"</span>,
+  boss:  <span class="k">None</span>,  <span class="c">// run 04 in progress</span>
+};</pre>
+        <p class="lede">I build and run the data, compute, and ML platforms that scientists and engineers work on. Every role here is a run. Every skill is a node with the run it unlocked in. The notebook keeps the abandoned entries.</p>
+        <div class="nav">
+          <a class="primary" href="#tab-runlog">./run-log</a>
+          <a href="#tab-tree">./tech-tree</a>
+          <a href="#tab-notebook">./notebook</a>
+          <a href="#tab-projects">./projects</a>
+          <a class="cv" href="#tab-cv">cv.pdf</a>
+        </div>
+      </div>
+
+      <div class="col">
+        <div class="card">
+          <h2><span>run-log · tail -n 4</span><span class="live">● live</span></h2>
+          <div class="log">
+            <span class="t">2021-06</span><span><span class="k">run 04</span> enter · Staff Software Engineer, Infrastructure</span>
+            <span class="t">floor 3</span><span>developer platform rebuilt · <span class="n">item</span> Skaffold</span>
+            <span class="t">floor 4</span><span><span style="color:var(--red)">abandoned</span> GPU foundation-model R&amp;D · kept in notebook</span>
+            <span class="t">now</span><span>boss: [the hardest problem of this run]<span class="cursor" style="color:var(--pink)">█</span></span>
+          </div>
+        </div>
+        <div class="card">
+          <h2><span>colonization</span><span id="phaseWord">colonizing</span></h2>
+          <div class="stats">
+            <span>gen<b id="genN">1</b></span>
+            <span>tips<b id="tipN">0</b></span>
+            <span>fusions<b id="joinN">0</b></span>
+            <span>colonized<b id="colN">0%</b></span>
+          </div>
+          <div class="note">A 4 × 3 × 4 mm substrate block, inoculated with one spawn grain. Hyphae absorb nutrient, move it through the network to their tips, branch behind the tip, steer away from dense mycelium, and fuse on contact. Color shows the ground each hypha grew through: green where nutrient was rich, purple where it was poor.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="foot">
+      <span class="seed">seed <b id="seedBottom">…</b> · <span id="statLine">…</span></span>
+      <div class="ctl">
+        <button type="button" class="go" id="regrow">regrow</button>
+        <button type="button" id="pause" aria-pressed="false">pause</button>
+        <button type="button" id="orbit" aria-pressed="true">orbit</button>
+      </div>
+      <span class="note" id="motionNote"></span>
+    </div>
+  </div>
+</main>
+
+<script>
+"use strict";
+// SIM-BEGIN
+function createSim(P, seed){
+  const H=0.1, NX=44, NY=34, NZ=44, PAD=2, N=NX*NY*NZ, H3=H*H*H;
+  const OX=-NX*H/2, OY=-NY*H/2, OZ=-NZ*H/2;
+  const SX=2, SY=1.5, SZ=2;                 // substrate half-extents, mm
+  const AIR=0.17;                           // aerial growth allowed this far beyond the block
+  const SEG=0.04, MAXSEG=340000, MAXTIPS=7000;
+  const GAMMA=0.008;                        // nutrient cost per mm of new hypha
+  const VUP=0.005, KM=0.2;                  // uptake per mm hypha per h; half-saturation
+  const MAINT=0.00004;                      // maintenance per mm hypha per h
+  const KC=0.002;                           // internal half-saturation for tip extension
+  const DI=0.2, DE=0.0005;                   // translocation / external diffusion, mm^2/h
+  const RHOMAX=230;                         // branching is suppressed as density approaches this
+  const TQ=2;                               // h of starvation before a tip goes quiescent
+  const RA=0.022, HC=0.05;                  // fusion capture radius; hash cell
+  const HX=Math.ceil(NX*H/HC), HY=Math.ceil(NY*H/HC), HZ=Math.ceil(NZ*H/HC);
+
+  let s=seed>>>0;
+  const rnd=()=>{ s=(s+0x6D2B79F5)|0; let t=Math.imul(s^(s>>>15),1|s); t=(t+Math.imul(t^(t>>>7),61|t))^t; return ((t^(t>>>14))>>>0)/4294967296; };
+  const gauss=()=>{ let u=rnd(); if(u<1e-9)u=1e-9; return Math.sqrt(-2*Math.log(u))*Math.cos(6.283185307*rnd()); };
+
+  const se=new Float32Array(N), si=new Float32Array(N), rho=new Float32Array(N), cc=new Float32Array(N), dd=new Float32Array(N);
+  const mask=new Uint8Array(N);
+  const seg=new Float32Array(MAXSEG*8), owner=new Int32Array(MAXSEG), hnext=new Int32Array(MAXSEG);
+  const hhead=new Int32Array(HX*HY*HZ).fill(-1);
+  const tips=[];
+  const st={time:0, nseg:0, totalLen:0, branches:0, fusions:0, se0:0, nextId:1};
+
+  // heterogeneous nutrient field: two octaves of value noise
+  function lattice(n){ const a=new Float32Array(n*n*n); for(let i=0;i<a.length;i++)a[i]=rnd(); return a; }
+  function vnoise(a,n,x,y,z){
+    const xi=Math.floor(x), yi=Math.floor(y), zi=Math.floor(z);
+    let fx=x-xi, fy=y-yi, fz=z-zi; fx=fx*fx*(3-2*fx); fy=fy*fy*(3-2*fy); fz=fz*fz*(3-2*fz);
+    const m=(v)=>((v%n)+n)%n; const g=(i,j,k)=>a[m(i)+n*(m(j)+n*m(k))];
+    const l=(p,q,t)=>p+(q-p)*t;
+    return l(l(l(g(xi,yi,zi),g(xi+1,yi,zi),fx),l(g(xi,yi+1,zi),g(xi+1,yi+1,zi),fx),fy),
+             l(l(g(xi,yi,zi+1),g(xi+1,yi,zi+1),fx),l(g(xi,yi+1,zi+1),g(xi+1,yi+1,zi+1),fx),fy),fz);
+  }
+  const la=lattice(12), lb=lattice(12);
+  for(let z=0;z<NZ;z++)for(let y=0;y<NY;y++)for(let x=0;x<NX;x++){
+    const i=x+NX*(y+NY*z);
+    if(x>=PAD&&x<NX-PAD&&y>=PAD&&y<NY-PAD&&z>=PAD&&z<NZ-PAD){
+      mask[i]=1;
+      const n=0.65*vnoise(la,12,x*H/0.7,y*H/0.7,z*H/0.7)+0.35*vnoise(lb,12,x*H/0.25,y*H/0.25,z*H/0.25);
+      se[i]=Math.max(0.05,1+P.het*2.6*(n-0.5));
+    }
+  }
+
+  function addSeg(x0,y0,z0,x1,y1,z1,own,order){
+    if(st.nseg>=MAXSEG) return;
+    const k=st.nseg++, o=k*8;
+    seg[o]=x0;seg[o+1]=y0;seg[o+2]=z0;seg[o+3]=st.time;seg[o+4]=x1;seg[o+5]=y1;seg[o+6]=z1;seg[o+7]=order;
+    owner[k]=own;
+    const hx=Math.min(HX-1,Math.max(0,((x0+x1)*0.5-OX)/HC|0)), hy=Math.min(HY-1,Math.max(0,((y0+y1)*0.5-OY)/HC|0)), hz=Math.min(HZ-1,Math.max(0,((z0+z1)*0.5-OZ)/HC|0));
+    const h=hx+HX*(hy+HY*hz); hnext[k]=hhead[h]; hhead[h]=k;
+    st.totalLen+=Math.hypot(x1-x0,y1-y0,z1-z0);
+  }
+  function newTip(x,y,z,dx,dy,dz,parent,order){
+    tips.push({x,y,z,dx,dy,dz,ox:x,oy:y,oz:z,lx:x,ly:y,lz:z,acc:0,len:0,id:st.nextId++,parent,order,trail:[],starve:0,noFuse:0.15,lastBr:0});
+  }
+  function inoculate(cx,cy,cz,ntips){
+    for(let z=0;z<NZ;z++)for(let y=0;y<NY;y++)for(let x=0;x<NX;x++){
+      const i=x+NX*(y+NY*z); if(!mask[i])continue;
+      const d=Math.hypot(OX+(x+.5)*H-cx,OY+(y+.5)*H-cy,OZ+(z+.5)*H-cz);
+      if(d<0.3) se[i]=Math.max(se[i],3.2);            // the spawn grain itself is a rich food source
+      if(d<0.25){ rho[i]+=150; si[i]+=150*0.05; }       // pre-grown mycelium on the grain with reserves
+    }
+    for(let k=0;k<ntips;k++){
+      let dx=gauss(),dy=gauss(),dz=gauss(); const l=Math.hypot(dx,dy,dz)||1; dx/=l;dy/=l;dz/=l;
+      const r=0.06*rnd();
+      newTip(cx+dx*r,Math.min(SY,cy+dy*r),cz+dz*r,dx,dy,dz,0,0);
+    }
+  }
+  if(P.inoc==="top") inoculate(0,SY-0.12,0,40);
+  else if(P.inoc==="mixed"){ for(let k=0;k<5;k++) inoculate((rnd()*2-1)*(SX-0.5),(rnd()*2-1)*(SY-0.4),(rnd()*2-1)*(SZ-0.5),18); }
+  else inoculate(0,0,0,40);
+  for(let i=0;i<N;i++) st.se0+=se[i];
+
+  function fields(dt){
+    for(let i=0;i<N;i++){
+      const r=rho[i]; if(r<=0)continue;
+      const sv=se[i];
+      if(sv>1e-6){ let u=VUP*r*sv/(KM+sv)*dt; if(u>sv)u=sv; se[i]=sv-u; si[i]+=u; }
+      const m=MAINT*r*dt; si[i]=si[i]>m?si[i]-m:0;
+    }
+    // translocation: diffusion of internal nutrient per unit hypha, conducted by the sparser of two neighbouring cells
+    const nsub=Math.max(1,Math.ceil(6*DI*dt/(H*H)/0.85)), k=DI*(dt/nsub)/(H*H), sy=NX, sz=NX*NY;
+    for(let q=0;q<nsub;q++){
+      for(let i=0;i<N;i++){ const r=rho[i]; cc[i]=r>0?si[i]/r:0; dd[i]=0; }
+      for(let z=0;z<NZ;z++)for(let y=0;y<NY;y++){
+        let i=NX*(y+NY*z);
+        for(let x=0;x<NX;x++,i++){
+          const ra=rho[i]; if(ra<=0)continue; const ca=cc[i]; let rb,f;
+          if(x<NX-1&&(rb=rho[i+1])>0){ f=k*(ra<rb?ra:rb)*(cc[i+1]-ca); dd[i]+=f; dd[i+1]-=f; }
+          if(y<NY-1&&(rb=rho[i+sy])>0){ f=k*(ra<rb?ra:rb)*(cc[i+sy]-ca); dd[i]+=f; dd[i+sy]-=f; }
+          if(z<NZ-1&&(rb=rho[i+sz])>0){ f=k*(ra<rb?ra:rb)*(cc[i+sz]-ca); dd[i]+=f; dd[i+sz]-=f; }
+        }
+      }
+      for(let i=0;i<N;i++){ if(dd[i]!==0){ const v=si[i]+dd[i]; si[i]=v>0?v:0; } }
+    }
+    // slow diffusion of external nutrient inside the block
+    const kd=DE*dt/(H*H);
+    dd.fill(0);
+    for(let z=PAD;z<NZ-PAD;z++)for(let y=PAD;y<NY-PAD;y++){
+      let i=PAD+NX*(y+NY*z);
+      for(let x=PAD;x<NX-PAD;x++,i++){
+        const a=se[i]; let f;
+        if(x<NX-PAD-1){ f=kd*(se[i+1]-a); dd[i]+=f; dd[i+1]-=f; }
+        if(y<NY-PAD-1){ f=kd*(se[i+sy]-a); dd[i]+=f; dd[i+sy]-=f; }
+        if(z<NZ-PAD-1){ f=kd*(se[i+sz]-a); dd[i]+=f; dd[i+sz]-=f; }
+      }
+    }
+    for(let i=0;i<N;i++) if(mask[i]) se[i]+=dd[i];
+  }
+
+  const cell=(x,y,z)=>{
+    let ix=(x-OX)/H|0, iy=(y-OY)/H|0, iz=(z-OZ)/H|0;
+    if(ix<0)ix=0;else if(ix>=NX)ix=NX-1; if(iy<0)iy=0;else if(iy>=NY)iy=NY-1; if(iz<0)iz=0;else if(iz>=NZ)iz=NZ-1;
+    return ix+NX*(iy+NY*iz);
+  };
+  function retire(k){ const t=tips[k]; if(t.acc>0.004) addSeg(t.lx,t.ly,t.lz,t.x,t.y,t.z,t.id,t.order); tips[k]=tips[tips.length-1]; tips.pop(); }
+
+  function step(dt){
+    fields(dt);
+    const sy=NX, sz=NX*NY, cosB=Math.cos(P.angle), X1=SX+AIR, Y1=SY+AIR, Z1=SZ+AIR;
+    for(let k=tips.length-1;k>=0;k--){
+      const t=tips[k];
+      // the apex is supplied along its own hypha, so it draws on the cell about 0.2 mm behind it
+      const T0=t.trail, src=T0.length?cell(T0[0],T0[1],T0[2]):cell(t.ox,t.oy,t.oz);
+      const i=cell(t.x,t.y,t.z), r=rho[i], rs=rho[src], c=rs>1e-6?si[src]/rs:0, sat=c/(KC+c);
+      let dL=P.vmax*sat*dt;
+      if(GAMMA*dL>si[src]*H3) dL=si[src]*H3/GAMMA;  // si is a concentration; the cost is an amount
+      si[src]-=GAMMA*dL/H3; if(si[src]<0)si[src]=0;
+      if(dL<0.03*P.vmax*dt){ t.starve+=dt; if(t.starve>TQ){ retire(k); continue; } }
+      else if(t.starve>0) t.starve=Math.max(0,t.starve-dt);
+      if(dL>1e-7){
+        const ix=i%NX, iy=((i/NX)|0)%NY, iz=(i/sz)|0;
+        const xm=ix>0?i-1:i, xp=ix<NX-1?i+1:i, ym=iy>0?i-sy:i, yp=iy<NY-1?i+sy:i, zm=iz>0?i-sz:i, zp=iz<NZ-1?i+sz:i;
+        let gx=(rho[xp]-rho[xm])/(2*H), gy=(rho[yp]-rho[ym])/(2*H), gz=(rho[zp]-rho[zm])/(2*H);
+        let gl=Math.sqrt(gx*gx+gy*gy+gz*gz)+300; const ka=-P.auto*dL/gl;
+        let nx=(se[xp]-se[xm])/(2*H), ny=(se[yp]-se[ym])/(2*H), nz=(se[zp]-se[zm])/(2*H);
+        const nl=Math.sqrt(nx*nx+ny*ny+nz*nz)+1.5, kn=P.chemo*dL/nl;
+        const sg=Math.sqrt(2*dL/P.lp);
+        let dx=t.dx+sg*gauss()+ka*gx+kn*nx, dy=t.dy+sg*gauss()+ka*gy+kn*ny, dz=t.dz+sg*gauss()+ka*gz+kn*nz;
+        const l=Math.sqrt(dx*dx+dy*dy+dz*dz)||1; dx/=l;dy/=l;dz/=l;
+        let px=t.x+dx*dL, py=t.y+dy*dL, pz=t.z+dz*dL;
+        if(px<-X1){px=-X1;dx=Math.abs(dx);}else if(px>X1){px=X1;dx=-Math.abs(dx);}
+        if(py<-SY){py=-SY;dy=Math.abs(dy);}else if(py>Y1){py=Y1;dy=-Math.abs(dy);}   // the block rests on a surface
+        if(pz<-Z1){pz=-Z1;dz=Math.abs(dz);}else if(pz>Z1){pz=Z1;dz=-Math.abs(dz);}
+        t.x=px;t.y=py;t.z=pz;t.dx=dx;t.dy=dy;t.dz=dz;t.acc+=dL;t.len+=dL;
+        rho[cell(px,py,pz)]+=dL/H3;
+        if(t.acc>=SEG){
+          addSeg(t.lx,t.ly,t.lz,px,py,pz,t.id,t.order);
+          t.lx=px;t.ly=py;t.lz=pz;t.acc=0;
+          t.trail.push(px,py,pz,dx,dy,dz); if(t.trail.length>30) t.trail.splice(0,6);
+        }
+      }
+      // lateral branching behind the apex
+      if(t.trail.length>=30 && t.len-t.lastBr>SEG && tips.length<MAXTIPS && st.nseg<MAXSEG){
+        const pb=P.beta*sat*Math.max(0,1-r/RHOMAX)*dt;
+        if(rnd()<pb){
+          const T=t.trail, bx=T[3],by=T[4],bz=T[5];
+          let ux=gauss(),uy=gauss(),uz=gauss(); const d=ux*bx+uy*by+uz*bz; ux-=d*bx;uy-=d*by;uz-=d*bz;
+          const ul=Math.hypot(ux,uy,uz)||1; ux/=ul;uy/=ul;uz/=ul;
+          const th=Math.acos(cosB)+0.14*gauss(), ct=Math.cos(th), sn=Math.sin(th);
+          newTip(T[0],T[1],T[2],ct*bx+sn*ux,ct*by+sn*uy,ct*bz+sn*uz,t.id,t.order+1);
+          t.lastBr=t.len; st.branches++;
+        }
+      }
+      // anastomosis: fuse with a foreign hypha within the capture radius
+      if(P.fuse>0 && t.len>t.noFuse){
+        const hx=(t.x-OX)/HC|0, hy=(t.y-OY)/HC|0, hz=(t.z-OZ)/HC|0; let hit=-1;
+        search: for(let c2=hz-1;c2<=hz+1;c2++){ if(c2<0||c2>=HZ)continue;
+          for(let b=hy-1;b<=hy+1;b++){ if(b<0||b>=HY)continue;
+            for(let a=hx-1;a<=hx+1;a++){ if(a<0||a>=HX)continue;
+              for(let q=hhead[a+HX*(b+HY*c2)];q>=0;q=hnext[q]){
+                if(owner[q]===t.id)continue;
+                const o=q*8, mx=(seg[o]+seg[o+4])*0.5-t.x, my=(seg[o+1]+seg[o+5])*0.5-t.y, mz=(seg[o+2]+seg[o+6])*0.5-t.z;
+                if(mx*mx+my*my+mz*mz<RA*RA){ hit=q; break search; }
+              }}}}
+        if(hit>=0){
+          if(rnd()<P.fuse){
+            const o=hit*8; addSeg(t.lx,t.ly,t.lz,(seg[o]+seg[o+4])*0.5,(seg[o+1]+seg[o+5])*0.5,(seg[o+2]+seg[o+6])*0.5,t.id,t.order);
+            st.fusions++; tips[k]=tips[tips.length-1]; tips.pop();
+          } else t.noFuse=t.len+0.08;
+        }
+      }
+    }
+    st.time+=dt;
+  }
+  function summary(){
+    let left=0, col=0, tot=0;
+    for(let i=0;i<N;i++){ if(mask[i]){ tot++; left+=se[i]; if(rho[i]>0)col++; } }
+    return {left:left/st.se0, colonized:col/tot, volume:tot*H3};
+  }
+  return {step,summary,st,tips,seg,se,rho,mask,dims:{NX,NY,NZ,PAD,H,SX,SY,SZ,MAXSEG}};
+}
+// SIM-END
+
+(function () {
+  var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var $ = function (id) { return document.getElementById(id); };
+
+  // ---- seeds ----------------------------------------------------------------------
+  function xmur3(str) {
+    var h = 1779033703 ^ str.length;
+    for (var i = 0; i < str.length; i++) { h = Math.imul(h ^ str.charCodeAt(i), 3432918353); h = (h << 13) | (h >>> 19); }
+    return function () { h = Math.imul(h ^ (h >>> 16), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909); return (h ^= h >>> 16) >>> 0; };
+  }
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function todaySeed() { var d = new Date(); return String(d.getFullYear()) + pad(d.getMonth() + 1) + pad(d.getDate()); }
+  function seedFromHash() { var h = (location.hash || '').slice(1); return /^[A-Za-z0-9._~-]{1,32}$/.test(h) ? h : null; }
+  function randomSeed() { var s = ''; for (var i = 0; i < 6; i++) s += '0123456789abcdef'[Math.floor(Math.random() * 16)]; return s; }
+
+  // ---- tunables (world units are mm: the block spans -2..2, -1.5..1.5, -2..2) --------
+  var P = { vmax: 0.25, beta: 1, angle: 62 * Math.PI / 180, lp: 1.2, auto: 2, chemo: 0.6, fuse: 0.5, het: 0.5, inoc: 'center' }; // the reference defaults
+  var DT = 0.02;              // simulated hours per model step, as in the reference
+  var HOURS_PER_SEC = 0.5;    // simulated hours per real second; about 60 h colonizes the block
+  var WARMUP_H = 3;           // simulated hours grown before the first frame
+  var GROW_LIMIT_H = 96;      // a generation is forced to finish after this many simulated hours
+  var HOLD = 8, FADE = 14;    // seconds
+  var FOV = 40 * Math.PI / 180;
+  var FILL = 1.3;             // block bounding sphere as a multiple of the narrower half-view; above 1 overfills
+  var BASE_YAW = 0.7, BASE_PITCH = 0.42;
+  var IDLE_ORBIT = 0.05;      // radians per second of slow self-orbit
+  var POINTER_ORBIT = 0.35;   // radians of orbit from the pointer
+  var SUBSTRATE = 0.3;        // substrate opacity; hyphae deeper inside the block fade, as in the reference slider
+  var DOF = 0.02;             // defocus: blur in viewport heights per unit of relative distance from the focal plane
+  var ALPHA = 0.7;            // hypha opacity in focus
+  var YOUNG_H = 2.5;          // hours over which new growth fades from bright to its ground color
+  var NDUST = 2600;           // substrate dust points
+  var TIP_PX = 2.2;           // pink tip point size in CSS pixels; 0 hides tips
+
+  // ---- WebGL --------------------------------------------------------------------------
+  var canvas = $('gl');
+  var gl = canvas.getContext('webgl2', { antialias: true, alpha: true, premultipliedAlpha: true, powerPreference: 'high-performance' });
+  if (!gl) { $('motionNote').textContent = 'the background needs WebGL 2, which this browser does not provide'; return; }
+
+  var COMMON = '#version 300 es\nprecision highp float;\n' +
+    'uniform vec3 uCam; uniform float uSigma;\n' +
+    'const vec3 BMIN=vec3(-2.,-1.5,-2.), BMAX=vec3(2.,1.5,2.);\n' +
+    'const vec3 PURPLE=vec3(.741,.576,.976), CYAN=vec3(.545,.914,.992), GREEN=vec3(.314,.980,.482), PINK=vec3(1.,.475,.776), FG=vec3(.973,.973,.949);\n' +
+    'vec3 morph(float t){ return t<.5?mix(PURPLE,CYAN,t*2.):mix(CYAN,GREEN,t*2.-1.); }\n' +
+    // fraction of light left after the path through the substrate between the camera and p
+    'float through(vec3 p){ vec3 v=p-uCam; float d=length(v); vec3 rd=v/d, inv=1./rd, t0=(BMIN-uCam)*inv, t1=(BMAX-uCam)*inv, a=min(t0,t1), b=max(t0,t1);\n' +
+    '  float tn=max(max(a.x,a.y),a.z), tf=min(min(b.x,b.y),b.z); return exp(-uSigma*max(0.,min(tf,d)-max(tn,0.))); }\n' +
+    'uniform mat4 uVP; uniform vec2 uView; uniform float uFocus, uDof;\n' +
+    // defocus in pixels for a point at view depth w
+    'float coc(float w){ return uDof*abs(w-uFocus)/w*uView.y; }\n';
+
+  var HY_VS = COMMON +
+    'in vec2 aCorner; in vec4 aA; in vec4 aB;\n' +
+    'uniform float uProj, uRadius, uMinPx; uniform highp sampler3D uRich;\n' +
+    'out vec3 vW; out float vU, vBirth, vRich, vCore, vGain;\n' +
+    'void main(){\n' +
+    '  vec4 ca=uVP*vec4(aA.xyz,1.), cb=uVP*vec4(aB.xyz,1.);\n' +
+    '  vec2 d=(cb.xy/cb.w-ca.xy/ca.w)*uView; float L=length(d); d=L>1e-5?d/L:vec2(1.,0.);\n' +
+    '  vec4 c=mix(ca,cb,aCorner.x);\n' +
+    '  float core=max(uMinPx,uRadius*uProj/c.w), px=core+coc(c.w);\n' +
+    // no end caps: translucent caps overlap at every joint and bead the strand
+    '  vec2 off=vec2(-d.y,d.x)*aCorner.y*px*2./uView;\n' +
+    '  gl_Position=vec4(c.xy+off*c.w,c.zw);\n' +
+    '  vW=mix(aA.xyz,aB.xyz,aCorner.x); vU=aCorner.y; vBirth=aA.w;\n' +
+    '  vRich=texture(uRich,clamp((aA.xyz-BMIN)/(BMAX-BMIN),0.,1.)).r;\n' +
+    '  vCore=core/px; vGain=sqrt(vCore);\n' +
+    '}';
+  var HY_FS = COMMON +
+    'in vec3 vW; in float vU, vBirth, vRich, vCore, vGain; out vec4 o;\n' +
+    'uniform float uTime, uYoung, uAlpha;\n' +
+    'void main(){\n' +
+    '  float u=abs(vU);\n' +
+    '  vec3 col=mix(morph(vRich),FG,.6*exp(-(uTime-vBirth)/uYoung));\n' +
+    '  col*=.55+.45*sqrt(max(0.,1.-u*u));\n' +
+    '  float a=uAlpha*vGain*(1.-smoothstep(vCore*.5,1.,u))*mix(.18,1.,through(vW));\n' +
+    '  if(a<.004) discard;\n' +
+    '  o=vec4(col*a,a);\n' +
+    '}';
+  var DUST_VS = COMMON +
+    'in vec3 aPos; uniform highp sampler3D uRich; uniform highp sampler3D uNut; uniform float uDpr;\n' +
+    'out vec3 vCol; out float vA;\n' +
+    'void main(){\n' +
+    '  vec4 c=uVP*vec4(aPos,1.); gl_Position=c;\n' +
+    '  vec3 uvw=(aPos-BMIN)/(BMAX-BMIN); float r=texture(uRich,uvw).r, n=texture(uNut,uvw).r;\n' +
+    '  float core=1.3*uDpr, px=core+coc(c.w); gl_PointSize=px;\n' +
+    '  vCol=mix(PURPLE,GREEN,r); vA=(.05+.12*r)*smoothstep(.02,.5,n)*(core/px)*mix(.3,1.,through(aPos));\n' +
+    '}';
+  var DUST_FS = '#version 300 es\nprecision highp float;\nin vec3 vCol; in float vA; out vec4 o;\n' +
+    'void main(){ vec2 q=gl_PointCoord*2.-1.; float a=vA*(1.-smoothstep(.4,1.,dot(q,q))); if(a<.003) discard; o=vec4(vCol*a,a); }';
+  var TIP_VS = COMMON +
+    'in vec3 aPos; uniform float uSize; out float vA;\n' +
+    'void main(){ vec4 c=uVP*vec4(aPos,1.); gl_Position=c; float px=uSize+coc(c.w); gl_PointSize=px; vA=.85*(uSize/px)*mix(.2,1.,through(aPos)); }';
+  var TIP_FS = COMMON +
+    'in float vA; out vec4 o;\n' +
+    'void main(){ vec2 q=gl_PointCoord*2.-1.; float a=vA*(1.-smoothstep(.3,1.,dot(q,q))); if(a<.004) discard; o=vec4(PINK*a,a); }';
+
+  function prog(vs, fs) {
+    var p = gl.createProgram();
+    [[gl.VERTEX_SHADER, vs], [gl.FRAGMENT_SHADER, fs]].forEach(function (s) {
+      var sh = gl.createShader(s[0]); gl.shaderSource(sh, s[1]); gl.compileShader(sh);
+      if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) console.error(gl.getShaderInfoLog(sh));
+      gl.attachShader(p, sh);
+    });
+    gl.linkProgram(p);
+    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) console.error(gl.getProgramInfoLog(p));
+    var u = {}, n = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS);
+    for (var i = 0; i < n; i++) { var nm = gl.getActiveUniform(p, i).name; u[nm] = gl.getUniformLocation(p, nm); }
+    return { p: p, u: u };
+  }
+  var pHy = prog(HY_VS, HY_FS), pDust = prog(DUST_VS, DUST_FS), pTip = prog(TIP_VS, TIP_FS);
+  function attrib(pr, name, size, stride, offset, divisor) {
+    var a = gl.getAttribLocation(pr.p, name); gl.enableVertexAttribArray(a);
+    gl.vertexAttribPointer(a, size, gl.FLOAT, false, stride || 0, offset || 0);
+    if (divisor) gl.vertexAttribDivisor(a, divisor);
+  }
+
+  // hyphae: one instanced ribbon per segment, 8 floats each (start xyz, birth h, end xyz, branch order)
+  var vaoHy = gl.createVertexArray(); gl.bindVertexArray(vaoHy);
+  gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer()); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([0, -1, 0, 1, 1, -1, 1, 1]), gl.STATIC_DRAW);
+  attrib(pHy, 'aCorner', 2);
+  var bSeg = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, bSeg);
+  attrib(pHy, 'aA', 4, 32, 0, 1); attrib(pHy, 'aB', 4, 32, 16, 1);
+
+  var vaoDust = gl.createVertexArray(); gl.bindVertexArray(vaoDust);
+  var bDust = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, bDust); gl.bufferData(gl.ARRAY_BUFFER, NDUST * 12, gl.STATIC_DRAW);
+  attrib(pDust, 'aPos', 3);
+
+  var MAXT = 7000, tipArr = new Float32Array(MAXT * 3);
+  var vaoTip = gl.createVertexArray(); gl.bindVertexArray(vaoTip);
+  var bTip = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, bTip); gl.bufferData(gl.ARRAY_BUFFER, tipArr.byteLength, gl.DYNAMIC_DRAW);
+  attrib(pTip, 'aPos', 3);
+  gl.bindVertexArray(null);
+
+  // fields as 3-D textures over the block interior: uRich is the starting nutrient rank, uNut the nutrient left
+  gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+  function tex3(unit) {
+    var t = gl.createTexture(); gl.activeTexture(gl.TEXTURE0 + unit); gl.bindTexture(gl.TEXTURE_3D, t);
+    gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    [gl.TEXTURE_WRAP_S, gl.TEXTURE_WRAP_T, gl.TEXTURE_WRAP_R].forEach(function (w) { gl.texParameteri(gl.TEXTURE_3D, w, gl.CLAMP_TO_EDGE); });
+    return t;
+  }
+  var texRich = tex3(0), texNut = tex3(1), fieldBuf = null;
+  function uploadField(unit, tex, map) {
+    var d = sim.dims, NX = d.NX, NY = d.NY, NZ = d.NZ, PD = d.PAD, w = NX - 2 * PD, h = NY - 2 * PD, dp = NZ - 2 * PD, se = sim.se, j = 0;
+    if (!fieldBuf) fieldBuf = new Uint8Array(w * h * dp);
+    for (var z = PD; z < NZ - PD; z++) for (var y = PD; y < NY - PD; y++) { var i = PD + NX * (y + NY * z); for (var x = 0; x < w; x++, i++, j++) fieldBuf[j] = map(se[i]); }
+    gl.activeTexture(gl.TEXTURE0 + unit); gl.bindTexture(gl.TEXTURE_3D, tex);
+    gl.texImage3D(gl.TEXTURE_3D, 0, gl.R8, w, h, dp, 0, gl.RED, gl.UNSIGNED_BYTE, fieldBuf);
+  }
+  function uploadRich() {
+    // rank the starting nutrient between its 5th and 95th percentiles, so every block shows both ends of the motif
+    var v = [], se = sim.se, mask = sim.mask;
+    for (var i = 0; i < se.length; i++) if (mask[i] && se[i] < 3) v.push(se[i]);
+    v.sort(function (a, b) { return a - b; });
+    var lo = v[Math.floor(v.length * 0.05)], hi = v[Math.floor(v.length * 0.95)], k = 255 / Math.max(1e-6, hi - lo);
+    uploadField(0, texRich, function (s) { var r = (s - lo) * k; return r < 0 ? 0 : r > 255 ? 255 : r; });
+  }
+  function uploadNut() { uploadField(1, texNut, function (s) { var r = s * 196; return r > 255 ? 255 : r; }); }
+
+  // ---- camera -------------------------------------------------------------------------
+  var R = Math.hypot(2, 1.5, 2);
+  function matVP(aspect, yaw, pitch, dist) {
+    var cp = Math.cos(pitch), eye = [dist * cp * Math.sin(yaw), dist * Math.sin(pitch), dist * cp * Math.cos(yaw)];
+    var f = [-eye[0] / dist, -eye[1] / dist, -eye[2] / dist];
+    var sl = Math.hypot(f[2], f[0]), s = [-f[2] / sl, 0, f[0] / sl];
+    var u = [s[1] * f[2] - s[2] * f[1], s[2] * f[0] - s[0] * f[2], s[0] * f[1] - s[1] * f[0]];
+    var tx = -(s[0] * eye[0] + s[2] * eye[2]), ty = -(u[0] * eye[0] + u[1] * eye[1] + u[2] * eye[2]), tz = f[0] * eye[0] + f[1] * eye[1] + f[2] * eye[2];
+    var view = [s[0], u[0], -f[0], 0, s[1], u[1], -f[1], 0, s[2], u[2], -f[2], 0, tx, ty, tz, 1];
+    var t = 1 / Math.tan(FOV / 2), n = 0.05, fr = 60;
+    var pr = [t / aspect, 0, 0, 0, 0, t, 0, 0, 0, 0, (fr + n) / (n - fr), -1, 0, 0, 2 * fr * n / (n - fr), 0];
+    var m = new Float32Array(16);
+    for (var c = 0; c < 4; c++) for (var r = 0; r < 4; r++) { var v = 0; for (var k = 0; k < 4; k++) v += pr[k * 4 + r] * view[c * 4 + k]; m[c * 4 + r] = v; }
+    return { m: m, eye: eye };
+  }
+  function fitDist(aspect) {
+    var hv = FOV / 2, hh = Math.atan(Math.tan(hv) * aspect);
+    return R / Math.sin(Math.min(hv, hh)) / FILL;
+  }
+
+  // ---- state --------------------------------------------------------------------------
+  var sim = null, uploaded = 0, seed, gen = 1, phase = 'grow', phaseT = 0, simDebt = 0;
+  var paused = false, hidden = false, orbitOn = !reduced, orbitYaw = 0;
+  var target = { x: 0, y: 0 }, cur = { x: 0, y: 0 }, clock = 0, lastPointer = -1e9;
+  var stage = $('stage'), term = $('term');
+
+  function startGeneration() {
+    var h = xmur3(seed + ':' + gen);
+    sim = createSim(P, h());
+    uploaded = 0; simDebt = 0; phase = 'grow'; phaseT = 0;
+    gl.bindBuffer(gl.ARRAY_BUFFER, bSeg); gl.bufferData(gl.ARRAY_BUFFER, sim.dims.MAXSEG * 32, gl.DYNAMIC_DRAW);
+    var dust = new Float32Array(NDUST * 3), r = h();
+    for (var i = 0; i < dust.length; i += 3) {
+      r = (Math.imul(r, 1664525) + 1013904223) >>> 0; dust[i] = (r / 4294967296 * 2 - 1) * 2;
+      r = (Math.imul(r, 1664525) + 1013904223) >>> 0; dust[i + 1] = (r / 4294967296 * 2 - 1) * 1.5;
+      r = (Math.imul(r, 1664525) + 1013904223) >>> 0; dust[i + 2] = (r / 4294967296 * 2 - 1) * 2;
+    }
+    gl.bindBuffer(gl.ARRAY_BUFFER, bDust); gl.bufferSubData(gl.ARRAY_BUFFER, 0, dust);
+    uploadRich(); uploadNut();
+    stage.classList.remove('fading');
+    if (reduced) stage.classList.add('hidden');
+    $('seedTop').textContent = seed; $('seedBottom').textContent = seed; $('genN').textContent = String(gen);
+  }
+
+  function grow(hours, budgetMs) {
+    simDebt += hours;
+    var t0 = performance.now();
+    while (simDebt >= DT && sim.tips.length) {
+      sim.step(DT); simDebt -= DT;
+      if (performance.now() - t0 > budgetMs) { simDebt = Math.min(simDebt, DT * 2); break; }
+    }
+  }
+  function advance(dt) {
+    phaseT += dt;
+    if (phase === 'grow') {
+      grow(reduced ? 1e9 : HOURS_PER_SEC * dt, 12);
+      if (!sim.tips.length || sim.st.time > GROW_LIMIT_H) { phase = 'hold'; phaseT = 0; stage.classList.remove('hidden'); }
+    } else if (phase === 'hold') {
+      if (phaseT > HOLD && !reduced) { phase = 'fade'; phaseT = 0; stage.classList.add('fading'); }
+    } else if (phase === 'fade') {
+      if (phaseT > FADE + 0.5) { gen++; startGeneration(); }
+    }
+  }
+
+  // ---- drawing ------------------------------------------------------------------------
+  function resize() {
+    var dpr = Math.min(window.devicePixelRatio || 1, 1.5), w = Math.round(canvas.clientWidth * dpr), h = Math.round(canvas.clientHeight * dpr);
+    if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
+    return dpr;
+  }
+  function draw() {
+    if (!reduced) {
+      if (clock - lastPointer > 3) { target.x = Math.sin(clock * 0.045) * 0.5; target.y = Math.cos(clock * 0.033) * 0.35; }
+      cur.x += (target.x - cur.x) * 0.03; cur.y += (target.y - cur.y) * 0.03;
+    }
+    var dpr = resize(), W = canvas.width, H = canvas.height, aspect = W / H, dist = fitDist(aspect);
+    var vp = matVP(aspect, BASE_YAW + orbitYaw + cur.x * POINTER_ORBIT, BASE_PITCH + cur.y * POINTER_ORBIT * 0.6, dist);
+    var o = Math.min(SUBSTRATE, 0.999), sigma = 0.4 * o / (1 - o);
+
+    if (sim.st.nseg > uploaded) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, bSeg);
+      gl.bufferSubData(gl.ARRAY_BUFFER, uploaded * 32, sim.seg, uploaded * 8, (sim.st.nseg - uploaded) * 8);
+      uploaded = sim.st.nseg;
+    }
+
+    gl.viewport(0, 0, W, H);
+    gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.disable(gl.DEPTH_TEST); gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_3D, texRich);
+    gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_3D, texNut);
+    function common(pr) {
+      gl.useProgram(pr.p);
+      gl.uniformMatrix4fv(pr.u.uVP, false, vp.m); gl.uniform3fv(pr.u.uCam, vp.eye); gl.uniform1f(pr.u.uSigma, sigma);
+      gl.uniform2f(pr.u.uView, W, H); gl.uniform1f(pr.u.uFocus, dist); gl.uniform1f(pr.u.uDof, DOF);
+    }
+
+    common(pDust); gl.uniform1i(pDust.u.uRich, 0); gl.uniform1i(pDust.u.uNut, 1); gl.uniform1f(pDust.u.uDpr, dpr);
+    gl.bindVertexArray(vaoDust); gl.drawArrays(gl.POINTS, 0, NDUST);
+
+    common(pHy); gl.uniform1i(pHy.u.uRich, 0);
+    gl.uniform1f(pHy.u.uProj, H / (2 * Math.tan(FOV / 2))); gl.uniform1f(pHy.u.uRadius, 0.006); gl.uniform1f(pHy.u.uMinPx, 0.62 * dpr);
+    gl.uniform1f(pHy.u.uTime, sim.st.time); gl.uniform1f(pHy.u.uYoung, YOUNG_H); gl.uniform1f(pHy.u.uAlpha, ALPHA);
+    gl.bindVertexArray(vaoHy); gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, uploaded);
+
+    var n = Math.min(sim.tips.length, MAXT);
+    if (TIP_PX > 0 && n) {
+      for (var k = 0; k < n; k++) { var t = sim.tips[k]; tipArr[k * 3] = t.x; tipArr[k * 3 + 1] = t.y; tipArr[k * 3 + 2] = t.z; }
+      gl.bindBuffer(gl.ARRAY_BUFFER, bTip); gl.bufferSubData(gl.ARRAY_BUFFER, 0, tipArr, 0, n * 3);
+      common(pTip); gl.uniform1f(pTip.u.uSize, TIP_PX * dpr);
+      gl.bindVertexArray(vaoTip); gl.drawArrays(gl.POINTS, 0, n);
+    }
+    gl.bindVertexArray(null);
+  }
+
+  // ---- ui -----------------------------------------------------------------------------
+  var lastUi = -1, frameN = 0;
+  function fmtLen(mm) { return mm < 1000 ? mm.toFixed(0) + ' mm' : (mm / 1000).toFixed(2) + ' m'; }
+  function ui() {
+    if (clock - lastUi < 0.25) return;
+    lastUi = clock;
+    var s = sim.summary(), st = sim.st;
+    $('tipN').textContent = sim.tips.length.toLocaleString(); $('joinN').textContent = st.fusions.toLocaleString();
+    $('colN').textContent = (s.colonized * 100).toFixed(0) + '%';
+    var word = phase === 'grow' ? 'colonizing' : phase === 'hold' ? 'growth stopped' : 'fading';
+    $('phaseWord').textContent = word;
+    $('statLine').textContent = 'gen ' + gen + ' · ' + st.time.toFixed(1) + ' h · ' + fmtLen(st.totalLen) + ' of hyphae · ' + (paused ? 'paused' : word);
+    if (!reduced) term.style.transform = 'translate3d(' + (-cur.x * 6).toFixed(2) + 'px,' + (-cur.y * 6).toFixed(2) + 'px,0)';
+  }
+  var lastT = 0;
+  function frame(now) {
+    requestAnimationFrame(frame);
+    if (hidden) { lastT = now; return; }
+    var dt = lastT ? Math.min(0.1, (now - lastT) / 1000) : 0.016;
+    lastT = now; clock += dt; frameN++;
+    if (!paused) {
+      advance(dt);
+      if (orbitOn) orbitYaw += IDLE_ORBIT * dt;
+      if (frameN % 10 === 0) uploadNut();
+    }
+    draw(); ui();
+  }
+
+  window.addEventListener('pointermove', function (e) { target.x = e.clientX / window.innerWidth - 0.5; target.y = e.clientY / window.innerHeight - 0.5; lastPointer = clock; }, { passive: true });
+  $('regrow').addEventListener('click', function () {
+    seed = randomSeed(); gen = 1;
+    try { history.replaceState(null, '', '#' + seed); } catch (e) {}
+    startGeneration(); grow(WARMUP_H, 1e9);
+  });
+  var pauseBtn = $('pause');
+  pauseBtn.addEventListener('click', function () { paused = !paused; pauseBtn.textContent = paused ? 'resume' : 'pause'; pauseBtn.setAttribute('aria-pressed', paused ? 'true' : 'false'); });
+  var orbitBtn = $('orbit');
+  orbitBtn.setAttribute('aria-pressed', orbitOn ? 'true' : 'false');
+  orbitBtn.addEventListener('click', function () { orbitOn = !orbitOn; orbitBtn.setAttribute('aria-pressed', orbitOn ? 'true' : 'false'); });
+  document.addEventListener('visibilitychange', function () { hidden = document.hidden; });
+  if (reduced) $('motionNote').textContent = 'reduced motion: the block colonizes once, out of view, then holds with a fixed camera';
+
+  seed = seedFromHash() || todaySeed();
+  startGeneration();
+  if (!reduced) grow(WARMUP_H, 1e9);
+  window.__sim = function () { return sim; };
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

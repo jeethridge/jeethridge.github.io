@@ -172,6 +172,9 @@ Reduced-motion users get one fully grown network, no fade, no parallax.
 | 2026-11-24 | Strands drawn as smooth curves through point midpoints, no tip dot | The user saw kinks and "a line chasing a dot". |
 | 2026-11-24 | Circuit behavior switches per run, with probability (1 − o)², and corners sharpen as nutrient falls | Blending directions every frame caused kinks. Per-run switching makes the organic-to-circuit transformation visible. |
 | 2026-11-24 | Sigmoid extension rate (half-saturation 0.35) and fewer tips (40) | The user asked for pockets that take much longer and a less jumbled colony. |
+| 2026-11-25 | v4 adopts the reference colonization model (`createSim`, Boswell-style uptake and translocation) unchanged | The user built the reference model and is happy with it. v3 stays as a checkpoint. |
+| 2026-11-25 | The trace-to-hypha motif shows in color only: hyphae take purple, cyan, or green from the starting nutrient where they grew | Keeps the model untouched. Geometry carries no circuit behavior in v4. |
+| 2026-11-25 | The background renders in WebGL 2 | The model draws about 130,000 segments per generation, which the 2-D canvas cannot hold at frame rate. |
 
 ## Open questions
 

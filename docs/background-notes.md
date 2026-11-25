@@ -5,10 +5,40 @@ block of nutrient. This note is the working record for tuning it: the knobs,
 what each critique changed, what to try next, and how to verify a change.
 The visual decisions themselves live in `design-brief.md`.
 
-File: `prototypes/background/index.html` is v1 (checkpoint, 2-D layers).
-`prototypes/substrate/index.html` is v2 (superseded). The current prototype
-is `prototypes/fruiting-block/index.html`. Published copy:
-https://claude.ai/artifact/ABsSSFFQttPcM38vC4qP1S
+File: `prototypes/colonization/index.html` is v4, the current prototype.
+`prototypes/fruiting-block/index.html` is v3 (checkpoint). Its published copy
+is https://claude.ai/artifact/ABsSSFFQttPcM38vC4qP1S.
+`prototypes/background/index.html` is v1 (checkpoint, 2-D layers).
+`prototypes/substrate/index.html` is v2 (superseded).
+
+## v4: the reference model in site style
+
+v4 runs the reference colonization model unchanged. The reference lives in
+the `hjp` harness workspace at
+`initiatives/personal-site/docs/design/mycelium-colonization-3d.html`, with
+its model notes beside it. The code between `// SIM-BEGIN` and `// SIM-END`
+in v4 must stay byte-identical to the reference. Check it with a `diff` of
+that range in both files.
+
+What v4 changes is the renderer and the page:
+
+- Hyphae are WebGL 2 ribbons without end caps. Translucent caps overlap at
+  joints and bead the strand.
+- Color comes from the starting nutrient rank at the segment start, between
+  the 5th and 95th percentiles: purple poor, cyan middle, green rich. New
+  growth starts near `fg` and fades to its ground color over 2.5 h.
+- Depth: substrate opacity 0.3 dims hyphae deeper in the block. Defocus
+  widens and dims strands away from the focal plane, in place of v3's
+  blurred canvas bins.
+- Substrate: dust points, green in rich ground and purple in poor ground.
+  Dust fades as nutrient is consumed. There is no block outline and no
+  ray-marched volume.
+- Tips: small pink points.
+- Timing: 0.5 simulated hours per second, so about two minutes per
+  generation. Then hold 8 s, fade 14 s, and regrow from the next seed.
+
+v4 tunables sit under the `tunables` comment in the second script block. The
+v3 tunables table below applies to v3 only.
 
 ## The algorithm in one screen
 
@@ -74,7 +104,9 @@ width formula `(1.4 + 0.6 * o) * cord`, and the cord growth `smooth(0, 60, age)`
 | 2026-11-24 | Make the substrate rich with pockets of low density | Field inverted: rich floor with Gaussian pockets |
 | 2026-11-24 | Too much of a jumble, a line chasing a dot, kinks, more organic, pockets slower, transformation more apparent | Tips cut to 40, tip dot removed, look-ahead autotropism, midpoint curves, per-run circuit mode with sharpening corners, sigmoid rate |
 
-The user's last word: "a good start". Not yet satisfied.
+| 2026-11-25 | Not happy with v3. Built a reference model with Fable, happy with the core model, adapt it to the site style | v4: reference model unchanged, Dracula renderer, motif in color only |
+
+The user's last word on v3: "a good start". v4 awaits the user's first critique.
 
 ## Ideas not yet tried, ranked
 
