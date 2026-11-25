@@ -76,6 +76,25 @@ button:hover{border-color:var(--cyan);color:var(--cyan)}
 button.go{color:var(--green);border-color:rgba(80,250,123,.5)}
 button[aria-pressed="true"]{border-color:var(--orange);color:var(--orange)}
 @media (prefers-reduced-motion: reduce){h1 .cursor{animation:none}#stage{transition:none}}
+
+/* substrate tab: the panel narrows and docks left so the block stays in view while tuning */
+.sec[hidden]{display:none}
+main.side{justify-content:flex-start}
+.term.side{max-width:420px}
+@media (max-width:860px){main.side{justify-content:center}}
+.ctlpage{display:flex;flex-direction:column;gap:18px;padding:24px 24px 20px}
+fieldset{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;min-width:0}
+legend{padding:0 0 6px;font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--purple)}
+.row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;align-items:baseline;font-size:12.5px}
+.row output{color:var(--orange);font-variant-numeric:tabular-nums}
+.row input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--purple);margin:2px 0 0;height:18px}
+.check{display:flex;gap:8px;align-items:center;font-size:12.5px}
+.check input{accent-color:var(--purple);width:15px;height:15px;margin:0}
+select{font:inherit;font-size:12.5px;color:var(--fg);background:rgba(33,34,44,.9);border:1px solid var(--line);border-radius:4px;padding:6px 8px;width:100%}
+details{border-top:1px solid var(--line);padding-top:12px;font-size:12px;color:var(--dim)}
+summary{cursor:pointer;color:var(--fg)}
+details ul{margin:8px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:6px}
+details b{color:var(--cyan);font-weight:500}
 </style>
 
 <div id="bg" aria-hidden="true">
@@ -85,15 +104,61 @@ button[aria-pressed="true"]{border-color:var(--orange);color:var(--orange)}
 <main>
   <div class="term" id="term">
     <nav class="tabs" aria-label="Site sections">
-      <a href="#tab-home" aria-current="page">1 home</a>
+      <a href="#tab-home" data-tab="home" aria-current="page">1 home</a>
       <a href="#tab-runlog">2 run-log</a>
       <a href="#tab-tree">3 tech-tree</a>
       <a href="#tab-notebook">4 notebook</a>
       <a href="#tab-projects">5 projects</a>
       <a href="#tab-colophon">6 colophon</a>
+      <a href="#tab-substrate" data-tab="substrate">7 substrate</a>
       <div class="meta"><span>jamesethridge.com</span><span>seed <b id="seedTop">…</b></span></div>
     </nav>
 
+    <section class="sec" id="sec-substrate" hidden>
+      <div class="ctlpage">
+        <div class="prompt"><span class="tilde">~</span> <span class="chev">❯</span> substrate --tune</div>
+        <fieldset>
+          <legend>view</legend>
+          <label class="row"><span>substrate opacity</span><output></output><input id="c-opacity" type="range" min="0" max="90" step="1"></label>
+          <label class="row"><span>zoom</span><output></output><input id="c-zoom" type="range" min="0.4" max="2" step="0.05"></label>
+          <label class="row"><span>speed</span><output></output><input id="c-speed" type="range" min="0.05" max="1.5" step="0.05"></label>
+          <label class="check"><input id="c-tips" type="checkbox"> mark growing tips</label>
+          <label class="check"><input id="c-orbit" type="checkbox"> orbit slowly</label>
+        </fieldset>
+        <fieldset>
+          <legend>hyphal growth · live</legend>
+          <label class="row"><span>tip extension rate</span><output></output><input id="c-vmax" type="range" min="0.05" max="0.6" step="0.01"></label>
+          <label class="row"><span>branching rate</span><output></output><input id="c-beta" type="range" min="0.1" max="3" step="0.05"></label>
+          <label class="row"><span>branch angle</span><output></output><input id="c-angle" type="range" min="20" max="90" step="1"></label>
+          <label class="row"><span>straightness</span><output></output><input id="c-lp" type="range" min="0.1" max="3" step="0.05"></label>
+          <label class="row"><span>avoidance of other hyphae</span><output></output><input id="c-auto" type="range" min="0" max="8" step="0.1"></label>
+          <label class="row"><span>fusion on contact</span><output></output><input id="c-fuse" type="range" min="0" max="100" step="5"></label>
+        </fieldset>
+        <fieldset>
+          <legend>substrate · restarts the block</legend>
+          <label class="row"><span>inoculation</span><span></span>
+            <select id="c-inoc" style="grid-column:1/-1">
+              <option value="top">one spawn grain on the top face</option>
+              <option value="center">one spawn grain at the center</option>
+              <option value="mixed">five spawn grains mixed through</option>
+            </select></label>
+          <label class="row"><span>nutrient patchiness</span><output></output><input id="c-het" type="range" min="0" max="100" step="5"></label>
+        </fieldset>
+        <details>
+          <summary>what the model computes</summary>
+          <ul>
+            <li><b>uptake</b> Hyphae absorb nutrient from the substrate with Michaelis–Menten kinetics.</li>
+            <li><b>translocation</b> Absorbed nutrient diffuses through the network from fed regions to starved ones.</li>
+            <li><b>extension</b> Each tip grows at a rate that saturates with the nutrient behind it. A tip that starves for 2 h stops.</li>
+            <li><b>direction</b> A persistent random walk, bent away from dense mycelium and weakly up the nutrient gradient.</li>
+            <li><b>branching</b> Lateral branches leave about 0.2 mm behind the tip, more often when the tip is well fed.</li>
+            <li><b>fusion</b> A tip that touches another hypha can fuse with it, which turns the tree into a network.</li>
+          </ul>
+        </details>
+      </div>
+    </section>
+
+    <section class="sec" id="sec-home">
     <div class="body">
       <div class="col">
         <div class="prompt"><span class="tilde">~</span> <span class="chev">❯</span> whoami</div>
@@ -134,10 +199,11 @@ button[aria-pressed="true"]{border-color:var(--orange);color:var(--orange)}
             <span>fusions<b id="joinN">0</b></span>
             <span>colonized<b id="colN">0%</b></span>
           </div>
-          <div class="note">A 4 × 3 × 4 mm substrate block, inoculated with one spawn grain. Hyphae absorb nutrient, move it through the network to their tips, branch behind the tip, steer away from dense mycelium, and fuse on contact. Color shows the ground each hypha grew through: green where nutrient was rich, purple where it was poor.</div>
+          <div class="note">A 4 × 3 × 4 mm substrate block, inoculated with one spawn grain on its top face. Hyphae absorb nutrient, move it through the network to their tips, branch behind the tip, steer away from dense mycelium, and fuse on contact. Color shows the ground each hypha grew through: green where nutrient was rich, purple where it was poor.</div>
         </div>
       </div>
     </div>
+    </section>
 
     <div class="foot">
       <span class="seed">seed <b id="seedBottom">…</b> · <span id="statLine">…</span></span>
@@ -368,23 +434,25 @@ function createSim(P, seed){
   function randomSeed() { var s = ''; for (var i = 0; i < 6; i++) s += '0123456789abcdef'[Math.floor(Math.random() * 16)]; return s; }
 
   // ---- tunables (world units are mm: the block spans -2..2, -1.5..1.5, -2..2) --------
-  var P = { vmax: 0.25, beta: 1, angle: 62 * Math.PI / 180, lp: 1.2, auto: 2, chemo: 0.6, fuse: 0.5, het: 0.5, inoc: 'center' }; // the reference defaults
+  // the reference defaults, except inoculation on the top face; growth controls change P live
+  var P = { vmax: 0.25, beta: 1, angle: 62 * Math.PI / 180, lp: 1.2, auto: 2, chemo: 0.6, fuse: 0.5, het: 0.5, inoc: 'top' };
   var DT = 0.02;              // simulated hours per model step, as in the reference
-  var HOURS_PER_SEC = 0.5;    // simulated hours per real second; about 60 h colonizes the block
+  var HOURS_PER_SEC = 0.3;    // simulated hours per real second; about 60 h colonizes the block
   var WARMUP_H = 3;           // simulated hours grown before the first frame
   var GROW_LIMIT_H = 96;      // a generation is forced to finish after this many simulated hours
   var HOLD = 8, FADE = 14;    // seconds
   var FOV = 40 * Math.PI / 180;
-  var FILL = 1.3;             // block bounding sphere as a multiple of the narrower half-view; above 1 overfills
+  var ZOOM = 1.1;             // 1 fits the block to cover the frame on both axes at the base view; above 1 overfills
   var BASE_YAW = 0.7, BASE_PITCH = 0.42;
   var IDLE_ORBIT = 0.05;      // radians per second of slow self-orbit
   var POINTER_ORBIT = 0.35;   // radians of orbit from the pointer
-  var SUBSTRATE = 0.3;        // substrate opacity; hyphae deeper inside the block fade, as in the reference slider
-  var DOF = 0.02;             // defocus: blur in viewport heights per unit of relative distance from the focal plane
-  var ALPHA = 0.7;            // hypha opacity in focus
+  var SUBSTRATE = 0.3;        // substrate opacity; light lost through the substrate dims and blurs hyphae deeper in the block
+  var SCATTER = 5;            // blur in CSS pixels for a hypha whose light the substrate absorbs fully
+  var ALPHA = 0.7;            // hypha opacity at the near face
   var YOUNG_H = 2.5;          // hours over which new growth fades from bright to its ground color
   var NDUST = 2600;           // substrate dust points
-  var TIP_PX = 2.2;           // pink tip point size in CSS pixels; 0 hides tips
+  var TIP_PX = 2.2;           // pink tip point size in CSS pixels
+  var showTips = true;
 
   // ---- WebGL --------------------------------------------------------------------------
   var canvas = $('gl');
@@ -399,9 +467,9 @@ function createSim(P, seed){
     // fraction of light left after the path through the substrate between the camera and p
     'float through(vec3 p){ vec3 v=p-uCam; float d=length(v); vec3 rd=v/d, inv=1./rd, t0=(BMIN-uCam)*inv, t1=(BMAX-uCam)*inv, a=min(t0,t1), b=max(t0,t1);\n' +
     '  float tn=max(max(a.x,a.y),a.z), tf=min(min(b.x,b.y),b.z); return exp(-uSigma*max(0.,min(tf,d)-max(tn,0.))); }\n' +
-    'uniform mat4 uVP; uniform vec2 uView; uniform float uFocus, uDof;\n' +
-    // defocus in pixels for a point at view depth w
-    'float coc(float w){ return uDof*abs(w-uFocus)/w*uView.y; }\n';
+    'uniform mat4 uVP; uniform vec2 uView; uniform float uScatter;\n' +
+    // blur in pixels from scattering: it grows with the light the substrate takes on the way to p
+    'float spread(vec3 p){ return uScatter*(1.-through(p)); }\n';
 
   var HY_VS = COMMON +
     'in vec2 aCorner; in vec4 aA; in vec4 aB;\n' +
@@ -410,12 +478,12 @@ function createSim(P, seed){
     'void main(){\n' +
     '  vec4 ca=uVP*vec4(aA.xyz,1.), cb=uVP*vec4(aB.xyz,1.);\n' +
     '  vec2 d=(cb.xy/cb.w-ca.xy/ca.w)*uView; float L=length(d); d=L>1e-5?d/L:vec2(1.,0.);\n' +
-    '  vec4 c=mix(ca,cb,aCorner.x);\n' +
-    '  float core=max(uMinPx,uRadius*uProj/c.w), px=core+coc(c.w);\n' +
+    '  vec4 c=mix(ca,cb,aCorner.x); vW=mix(aA.xyz,aB.xyz,aCorner.x);\n' +
+    '  float core=max(uMinPx,uRadius*uProj/c.w), px=core+spread(vW);\n' +
     // no end caps: translucent caps overlap at every joint and bead the strand
     '  vec2 off=vec2(-d.y,d.x)*aCorner.y*px*2./uView;\n' +
     '  gl_Position=vec4(c.xy+off*c.w,c.zw);\n' +
-    '  vW=mix(aA.xyz,aB.xyz,aCorner.x); vU=aCorner.y; vBirth=aA.w;\n' +
+    '  vU=aCorner.y; vBirth=aA.w;\n' +
     '  vRich=texture(uRich,clamp((aA.xyz-BMIN)/(BMAX-BMIN),0.,1.)).r;\n' +
     '  vCore=core/px; vGain=sqrt(vCore);\n' +
     '}';
@@ -434,16 +502,16 @@ function createSim(P, seed){
     'in vec3 aPos; uniform highp sampler3D uRich; uniform highp sampler3D uNut; uniform float uDpr;\n' +
     'out vec3 vCol; out float vA;\n' +
     'void main(){\n' +
-    '  vec4 c=uVP*vec4(aPos,1.); gl_Position=c;\n' +
+    '  gl_Position=uVP*vec4(aPos,1.);\n' +
     '  vec3 uvw=(aPos-BMIN)/(BMAX-BMIN); float r=texture(uRich,uvw).r, n=texture(uNut,uvw).r;\n' +
-    '  float core=1.3*uDpr, px=core+coc(c.w); gl_PointSize=px;\n' +
+    '  float core=1.3*uDpr, px=core+spread(aPos); gl_PointSize=px;\n' +
     '  vCol=mix(PURPLE,GREEN,r); vA=(.05+.12*r)*smoothstep(.02,.5,n)*(core/px)*mix(.3,1.,through(aPos));\n' +
     '}';
   var DUST_FS = '#version 300 es\nprecision highp float;\nin vec3 vCol; in float vA; out vec4 o;\n' +
     'void main(){ vec2 q=gl_PointCoord*2.-1.; float a=vA*(1.-smoothstep(.4,1.,dot(q,q))); if(a<.003) discard; o=vec4(vCol*a,a); }';
   var TIP_VS = COMMON +
     'in vec3 aPos; uniform float uSize; out float vA;\n' +
-    'void main(){ vec4 c=uVP*vec4(aPos,1.); gl_Position=c; float px=uSize+coc(c.w); gl_PointSize=px; vA=.85*(uSize/px)*mix(.2,1.,through(aPos)); }';
+    'void main(){ gl_Position=uVP*vec4(aPos,1.); float px=uSize+spread(aPos); gl_PointSize=px; vA=.85*(uSize/px)*mix(.2,1.,through(aPos)); }';
   var TIP_FS = COMMON +
     'in float vA; out vec4 o;\n' +
     'void main(){ vec2 q=gl_PointCoord*2.-1.; float a=vA*(1.-smoothstep(.3,1.,dot(q,q))); if(a<.004) discard; o=vec4(PINK*a,a); }';
@@ -526,9 +594,27 @@ function createSim(P, seed){
     for (var c = 0; c < 4; c++) for (var r = 0; r < 4; r++) { var v = 0; for (var k = 0; k < 4; k++) v += pr[k * 4 + r] * view[c * 4 + k]; m[c * 4 + r] = v; }
     return { m: m, eye: eye };
   }
+  // camera distance at which the block's projection at the base view covers ZOOM times the frame on both axes
+  var fitKey = '', fitD = 0;
   function fitDist(aspect) {
-    var hv = FOV / 2, hh = Math.atan(Math.tan(hv) * aspect);
-    return R / Math.sin(Math.min(hv, hh)) / FILL;
+    var key = aspect.toFixed(4) + ':' + ZOOM;
+    if (key === fitKey) return fitD;
+    function cover(d) {
+      var m = matVP(aspect, BASE_YAW, BASE_PITCH, d).m, x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+      for (var i = 0; i < 8; i++) {
+        var p = [i & 1 ? 2 : -2, i & 2 ? 1.5 : -1.5, i & 4 ? 2 : -2];
+        var w = m[3] * p[0] + m[7] * p[1] + m[11] * p[2] + m[15];
+        var x = (m[0] * p[0] + m[4] * p[1] + m[8] * p[2] + m[12]) / w, y = (m[1] * p[0] + m[5] * p[1] + m[9] * p[2] + m[13]) / w;
+        x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y);
+      }
+      return Math.min(x1 - x0, y1 - y0) / 2;
+    }
+    // the camera stays outside the bounding sphere, so every corner projects in front of it
+    var lo = R * 1.05, hi = 60;
+    if (cover(lo) <= ZOOM) hi = lo;
+    else for (var k = 0; k < 40; k++) { var mid = (lo + hi) / 2; if (cover(mid) > ZOOM) lo = mid; else hi = mid; }
+    fitKey = key; fitD = hi;
+    return hi;
   }
 
   // ---- state --------------------------------------------------------------------------
@@ -604,7 +690,7 @@ function createSim(P, seed){
     function common(pr) {
       gl.useProgram(pr.p);
       gl.uniformMatrix4fv(pr.u.uVP, false, vp.m); gl.uniform3fv(pr.u.uCam, vp.eye); gl.uniform1f(pr.u.uSigma, sigma);
-      gl.uniform2f(pr.u.uView, W, H); gl.uniform1f(pr.u.uFocus, dist); gl.uniform1f(pr.u.uDof, DOF);
+      gl.uniform2f(pr.u.uView, W, H); gl.uniform1f(pr.u.uScatter, SCATTER * dpr);
     }
 
     common(pDust); gl.uniform1i(pDust.u.uRich, 0); gl.uniform1i(pDust.u.uNut, 1); gl.uniform1f(pDust.u.uDpr, dpr);
@@ -616,7 +702,7 @@ function createSim(P, seed){
     gl.bindVertexArray(vaoHy); gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, uploaded);
 
     var n = Math.min(sim.tips.length, MAXT);
-    if (TIP_PX > 0 && n) {
+    if (showTips && n) {
       for (var k = 0; k < n; k++) { var t = sim.tips[k]; tipArr[k * 3] = t.x; tipArr[k * 3 + 1] = t.y; tipArr[k * 3 + 2] = t.z; }
       gl.bindBuffer(gl.ARRAY_BUFFER, bTip); gl.bufferSubData(gl.ARRAY_BUFFER, 0, tipArr, 0, n * 3);
       common(pTip); gl.uniform1f(pTip.u.uSize, TIP_PX * dpr);
@@ -661,9 +747,50 @@ function createSim(P, seed){
   });
   var pauseBtn = $('pause');
   pauseBtn.addEventListener('click', function () { paused = !paused; pauseBtn.textContent = paused ? 'resume' : 'pause'; pauseBtn.setAttribute('aria-pressed', paused ? 'true' : 'false'); });
-  var orbitBtn = $('orbit');
-  orbitBtn.setAttribute('aria-pressed', orbitOn ? 'true' : 'false');
-  orbitBtn.addEventListener('click', function () { orbitOn = !orbitOn; orbitBtn.setAttribute('aria-pressed', orbitOn ? 'true' : 'false'); });
+  var orbitBtn = $('orbit'), orbitBox = $('c-orbit');
+  function setOrbit(on) { orbitOn = on; orbitBtn.setAttribute('aria-pressed', on ? 'true' : 'false'); orbitBox.checked = on; }
+  setOrbit(orbitOn);
+  orbitBtn.addEventListener('click', function () { setOrbit(!orbitOn); });
+  orbitBox.addEventListener('change', function () { setOrbit(orbitBox.checked); });
+
+  // ---- substrate tab ------------------------------------------------------------------
+  function restartBlock() { startGeneration(); if (!reduced) grow(WARMUP_H, 1e9); }
+  var DEG = Math.PI / 180;
+  var controls = {
+    opacity: [function () { return SUBSTRATE * 100; }, function (v) { SUBSTRATE = v / 100; }, function (v) { return Math.round(v) + '%'; }],
+    zoom: [function () { return ZOOM; }, function (v) { ZOOM = v; }, function (v) { return v.toFixed(2) + '×'; }],
+    speed: [function () { return HOURS_PER_SEC; }, function (v) { HOURS_PER_SEC = v; }, function (v) { return v.toFixed(2) + ' h/s'; }],
+    vmax: [function () { return P.vmax; }, function (v) { P.vmax = v; }, function (v) { return v.toFixed(2) + ' mm/h'; }],
+    beta: [function () { return P.beta; }, function (v) { P.beta = v; }, function (v) { return v.toFixed(2) + ' /h'; }],
+    angle: [function () { return P.angle / DEG; }, function (v) { P.angle = v * DEG; }, function (v) { return Math.round(v) + '°'; }],
+    lp: [function () { return P.lp; }, function (v) { P.lp = v; }, function (v) { return v.toFixed(2) + ' mm'; }],
+    auto: [function () { return P.auto; }, function (v) { P.auto = v; }, function (v) { return v.toFixed(1); }],
+    fuse: [function () { return P.fuse * 100; }, function (v) { P.fuse = v / 100; }, function (v) { return Math.round(v) + '%'; }],
+    het: [function () { return P.het * 100; }, function (v) { P.het = v / 100; }, function (v) { return Math.round(v) + '%'; }]
+  };
+  Object.keys(controls).forEach(function (id) {
+    var c = controls[id], el = $('c-' + id), out = el.parentNode.querySelector('output');
+    el.value = c[0](); out.textContent = c[2](+el.value);
+    el.addEventListener('input', function () { c[1](+el.value); out.textContent = c[2](+el.value); });
+  });
+  $('c-het').addEventListener('change', restartBlock);
+  $('c-inoc').value = P.inoc;
+  $('c-inoc').addEventListener('change', function (e) { P.inoc = e.target.value; restartBlock(); });
+  $('c-tips').checked = showTips;
+  $('c-tips').addEventListener('change', function (e) { showTips = e.target.checked; });
+
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('.tabs a')), main = document.querySelector('main');
+  tabs.forEach(function (a) {
+    a.addEventListener('click', function (e) {
+      // the URL hash holds the seed, so tabs do not navigate
+      e.preventDefault();
+      var name = a.getAttribute('data-tab');
+      if (!name) return;
+      tabs.forEach(function (b) { if (b === a) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
+      $('sec-home').hidden = name !== 'home'; $('sec-substrate').hidden = name !== 'substrate';
+      term.classList.toggle('side', name === 'substrate'); main.classList.toggle('side', name === 'substrate');
+    });
+  });
   document.addEventListener('visibilitychange', function () { hidden = document.hidden; });
   if (reduced) $('motionNote').textContent = 'reduced motion: the block colonizes once, out of view, then holds with a fixed camera';
 

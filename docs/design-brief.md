@@ -150,6 +150,7 @@ Reduced-motion users get one fully grown network, no fade, no parallax.
 | notebook | articles with status chips |
 | projects | glmerge, the Translational Psychiatry paper, side quests |
 | colophon | how the site is built |
+| substrate | live controls for the background simulation |
 | cv.pdf | the current resume PDF from the `curriculum-vitae` repo |
 
 ## Decisions recorded
@@ -175,6 +176,9 @@ Reduced-motion users get one fully grown network, no fade, no parallax.
 | 2026-11-25 | v4 adopts the reference colonization model (`createSim`, Boswell-style uptake and translocation) unchanged | The user built the reference model and is happy with it. v3 stays as a checkpoint. |
 | 2026-11-25 | The trace-to-hypha motif shows in color only: hyphae take purple, cyan, or green from the starting nutrient where they grew | Keeps the model untouched. Geometry carries no circuit behavior in v4. |
 | 2026-11-25 | The background renders in WebGL 2 | The model draws about 130,000 segments per generation, which the 2-D canvas cannot hold at frame rate. |
+| 2026-11-25 | Blur comes from depth in the substrate, set by substrate opacity, not from a focal plane | The user's call: blur must read as how far back in the substrate a hypha sits. |
+| 2026-11-25 | A seventh tab, `substrate`, exposes the simulation controls | The user asked for the controls in a foreground tab. The colophon keeps the prose on how the site works. |
+| 2026-11-25 | Default view sits inside the block: zoom 1.1 of a cover fit, spawn grain on the top face, 0.3 simulated hours per second | The user asked for a slower run seeded from the top and a block slightly larger than the frame. |
 
 ## Open questions
 

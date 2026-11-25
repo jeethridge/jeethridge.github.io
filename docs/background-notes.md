@@ -27,15 +27,24 @@ What v4 changes is the renderer and the page:
 - Color comes from the starting nutrient rank at the segment start, between
   the 5th and 95th percentiles: purple poor, cyan middle, green rich. New
   growth starts near `fg` and fades to its ground color over 2.5 h.
-- Depth: substrate opacity 0.3 dims hyphae deeper in the block. Defocus
-  widens and dims strands away from the focal plane, in place of v3's
-  blurred canvas bins.
+- Depth: substrate opacity sets how much light the substrate takes between
+  the camera and each hypha. That loss dims the hypha and blurs it by up to
+  `SCATTER` pixels, so blur grows with depth in the substrate. At opacity 0,
+  every hypha is sharp. There is no focal plane.
+- Camera: `ZOOM` 1 makes the block's projection cover the frame on both axes
+  at the base view. The default 1.1 overfills a little, so the view sits
+  inside the block.
+- Inoculation: one spawn grain on the top face by default.
 - Substrate: dust points, green in rich ground and purple in poor ground.
   Dust fades as nutrient is consumed. There is no block outline and no
   ray-marched volume.
 - Tips: small pink points.
-- Timing: 0.5 simulated hours per second, so about two minutes per
-  generation. Then hold 8 s, fade 14 s, and regrow from the next seed.
+- Timing: 0.3 simulated hours per second, so about three and a half minutes
+  per generation. Then hold 8 s, fade 14 s, and regrow from the next seed.
+- Controls: tab `7 substrate` docks the panel left and exposes substrate
+  opacity, zoom, speed, tips, orbit, the six growth parameters (live), and
+  inoculation and patchiness (both restart the block). Tabs do not change
+  the URL hash, because the hash holds the seed.
 
 v4 tunables sit under the `tunables` comment in the second script block. The
 v3 tunables table below applies to v3 only.
@@ -106,7 +115,9 @@ width formula `(1.4 + 0.6 * o) * cord`, and the cord growth `smooth(0, 60, age)`
 
 | 2026-11-25 | Not happy with v3. Built a reference model with Fable, happy with the core model, adapt it to the site style | v4: reference model unchanged, Dracula renderer, motif in color only |
 
-The user's last word on v3: "a good start". v4 awaits the user's first critique.
+| 2026-11-25 | Likes v4. Expose controls in a tab, slower, spawn on the top face, zoom in so the block is slightly larger than the frame, blur should follow depth in the substrate | Substrate tab, 0.3 h/s, top inoculation, cover-fit zoom 1.1, scattering blur set by substrate opacity in place of defocus |
+
+The user's last word on v3: "a good start". On v4: "I like this".
 
 ## Ideas not yet tried, ranked
 
