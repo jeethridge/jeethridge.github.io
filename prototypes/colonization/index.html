@@ -122,6 +122,14 @@ details b{color:var(--cyan);font-weight:500}
           <label class="row"><span>substrate opacity</span><output></output><input id="c-opacity" type="range" min="0" max="90" step="1"></label>
           <label class="row"><span>zoom</span><output></output><input id="c-zoom" type="range" min="0.4" max="2" step="0.05"></label>
           <label class="row"><span>speed</span><output></output><input id="c-speed" type="range" min="0.05" max="1.5" step="0.05"></label>
+          <label class="row"><span>color hyphae by</span><span></span>
+            <select id="c-color" style="grid-column:1/-1">
+              <option value="0">connectivity: one color per spawn grain until networks join</option>
+              <option value="1">ground nutrient where each hypha grew</option>
+              <option value="2">natural: new growth brighter</option>
+              <option value="3">time of formation</option>
+              <option value="4">branch order</option>
+            </select></label>
           <label class="check"><input id="c-tips" type="checkbox"> mark growing tips</label>
           <label class="check"><input id="c-orbit" type="checkbox"> orbit slowly</label>
         </fieldset>
@@ -138,9 +146,9 @@ details b{color:var(--cyan);font-weight:500}
           <legend>substrate · restarts the block</legend>
           <label class="row"><span>inoculation</span><span></span>
             <select id="c-inoc" style="grid-column:1/-1">
+              <option value="mixed">five spawn grains mixed through</option>
               <option value="top">one spawn grain on the top face</option>
               <option value="center">one spawn grain at the center</option>
-              <option value="mixed">five spawn grains mixed through</option>
             </select></label>
           <label class="row"><span>nutrient patchiness</span><output></output><input id="c-het" type="range" min="0" max="100" step="5"></label>
         </fieldset>
@@ -194,12 +202,12 @@ details b{color:var(--cyan);font-weight:500}
         <div class="card">
           <h2><span>colonization</span><span id="phaseWord">colonizing</span></h2>
           <div class="stats">
-            <span>gen<b id="genN">1</b></span>
+            <span>networks<b id="netN">1</b></span>
             <span>tips<b id="tipN">0</b></span>
             <span>fusions<b id="joinN">0</b></span>
             <span>colonized<b id="colN">0%</b></span>
           </div>
-          <div class="note">A 4 × 3 × 4 mm substrate block, inoculated with one spawn grain on its top face. Hyphae absorb nutrient, move it through the network to their tips, branch behind the tip, steer away from dense mycelium, and fuse on contact. Color shows the ground each hypha grew through: green where nutrient was rich, purple where it was poor.</div>
+          <div class="note"><span id="inocNote"></span> Hyphae absorb nutrient, move it through the network to their tips, branch behind the tip, steer away from dense mycelium, and fuse on contact. <span id="colorNote"></span></div>
         </div>
       </div>
     </div>
@@ -435,10 +443,10 @@ function createSim(P, seed){
 
   // ---- tunables (world units are mm: the block spans -2..2, -1.5..1.5, -2..2) --------
   // the reference defaults, except inoculation on the top face; growth controls change P live
-  var P = { vmax: 0.25, beta: 1, angle: 62 * Math.PI / 180, lp: 1.2, auto: 2, chemo: 0.6, fuse: 0.5, het: 0.5, inoc: 'top' };
+  var P = { vmax: 0.25, beta: 1, angle: 62 * Math.PI / 180, lp: 1.2, auto: 2, chemo: 0.6, fuse: 0.5, het: 0.5, inoc: 'mixed' };
   var DT = 0.02;              // simulated hours per model step, as in the reference
   var HOURS_PER_SEC = 0.3;    // simulated hours per real second; about 60 h colonizes the block
-  var WARMUP_H = 3;           // simulated hours grown before the first frame
+  var WARMUP_H = 1;           // simulated hours grown before the first frame; short, so the grains show apart before they join
   var GROW_LIMIT_H = 96;      // a generation is forced to finish after this many simulated hours
   var HOLD = 8, FADE = 14;    // seconds
   var FOV = 40 * Math.PI / 180;
@@ -462,7 +470,7 @@ function createSim(P, seed){
   var COMMON = '#version 300 es\nprecision highp float;\n' +
     'uniform vec3 uCam; uniform float uSigma;\n' +
     'const vec3 BMIN=vec3(-2.,-1.5,-2.), BMAX=vec3(2.,1.5,2.);\n' +
-    'const vec3 PURPLE=vec3(.741,.576,.976), CYAN=vec3(.545,.914,.992), GREEN=vec3(.314,.980,.482), PINK=vec3(1.,.475,.776), FG=vec3(.973,.973,.949);\n' +
+    'const vec3 PURPLE=vec3(.741,.576,.976), CYAN=vec3(.545,.914,.992), GREEN=vec3(.314,.980,.482), PINK=vec3(1.,.475,.776), FG=vec3(.973,.973,.949), DIM=vec3(.604,.639,.788);\n' +
     'vec3 morph(float t){ return t<.5?mix(PURPLE,CYAN,t*2.):mix(CYAN,GREEN,t*2.-1.); }\n' +
     // fraction of light left after the path through the substrate between the camera and p
     'float through(vec3 p){ vec3 v=p-uCam; float d=length(v); vec3 rd=v/d, inv=1./rd, t0=(BMIN-uCam)*inv, t1=(BMAX-uCam)*inv, a=min(t0,t1), b=max(t0,t1);\n' +
@@ -472,9 +480,9 @@ function createSim(P, seed){
     'float spread(vec3 p){ return uScatter*(1.-through(p)); }\n';
 
   var HY_VS = COMMON +
-    'in vec2 aCorner; in vec4 aA; in vec4 aB;\n' +
+    'in vec2 aCorner; in vec4 aA; in vec4 aB; in float aC;\n' +
     'uniform float uProj, uRadius, uMinPx; uniform highp sampler3D uRich;\n' +
-    'out vec3 vW; out float vU, vBirth, vRich, vCore, vGain;\n' +
+    'out vec3 vW; out float vU, vBirth, vOrder, vRich, vCore, vGain; flat out int vC;\n' +
     'void main(){\n' +
     '  vec4 ca=uVP*vec4(aA.xyz,1.), cb=uVP*vec4(aB.xyz,1.);\n' +
     '  vec2 d=(cb.xy/cb.w-ca.xy/ca.w)*uView; float L=length(d); d=L>1e-5?d/L:vec2(1.,0.);\n' +
@@ -483,16 +491,29 @@ function createSim(P, seed){
     // no end caps: translucent caps overlap at every joint and bead the strand
     '  vec2 off=vec2(-d.y,d.x)*aCorner.y*px*2./uView;\n' +
     '  gl_Position=vec4(c.xy+off*c.w,c.zw);\n' +
-    '  vU=aCorner.y; vBirth=aA.w;\n' +
+    '  vU=aCorner.y; vBirth=aA.w; vOrder=aB.w; vC=int(aC+.5);\n' +
     '  vRich=texture(uRich,clamp((aA.xyz-BMIN)/(BMAX-BMIN),0.,1.)).r;\n' +
     '  vCore=core/px; vGain=sqrt(vCore);\n' +
     '}';
   var HY_FS = COMMON +
-    'in vec3 vW; in float vU, vBirth, vRich, vCore, vGain; out vec4 o;\n' +
-    'uniform float uTime, uYoung, uAlpha;\n' +
+    'in vec3 vW; in float vU, vBirth, vOrder, vRich, vCore, vGain; flat in int vC; out vec4 o;\n' +
+    'uniform float uTime, uYoung, uAlpha, uClock; uniform int uMode;\n' +
+    // connectivity: the current color of each grain's subnetwork, and a ring of light from each join over the joined network
+    'uniform vec3 uColony[8]; uniform vec4 uPulse[8]; uniform int uPulseMask[8];\n' +
+    'const float PULSE_SPEED=.7, PULSE_LIFE=4.5;\n' +
     'void main(){\n' +
-    '  float u=abs(vU);\n' +
-    '  vec3 col=mix(morph(vRich),FG,.6*exp(-(uTime-vBirth)/uYoung));\n' +
+    '  float u=abs(vU), young=exp(-(uTime-vBirth)/uYoung);\n' +
+    '  vec3 col;\n' +
+    '  if(uMode==0){\n' +
+    '    col=mix(uColony[vC],FG,.6*young); float g=0.;\n' +
+    '    for(int i=0;i<8;i++){ float age=uClock-uPulse[i].w; if(age<0.||age>PULSE_LIFE||((uPulseMask[i]>>vC)&1)==0) continue;\n' +
+    '      float r=(length(vW-uPulse[i].xyz)-age*PULSE_SPEED)/.18; g+=exp(-r*r)*(1.-age/PULSE_LIFE); }\n' +
+    '    col=mix(col,FG,.85*min(g,1.));\n' +
+    '  }\n' +
+    '  else if(uMode==1) col=mix(morph(vRich),FG,.6*young);\n' +
+    '  else if(uMode==2) col=mix(DIM,FG,young);\n' +
+    '  else if(uMode==3) col=morph(clamp(vBirth/max(uTime,1.),0.,1.));\n' +
+    '  else col=morph(clamp(vOrder/9.,0.,1.));\n' +
     '  col*=.55+.45*sqrt(max(0.,1.-u*u));\n' +
     '  float a=uAlpha*vGain*(1.-smoothstep(vCore*.5,1.,u))*mix(.18,1.,through(vW));\n' +
     '  if(a<.004) discard;\n' +
@@ -542,6 +563,9 @@ function createSim(P, seed){
   attrib(pHy, 'aCorner', 2);
   var bSeg = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, bSeg);
   attrib(pHy, 'aA', 4, 32, 0, 1); attrib(pHy, 'aB', 4, 32, 16, 1);
+  // the spawn grain (colony) of each segment, one float per segment
+  var bSegCol = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, bSegCol);
+  attrib(pHy, 'aC', 1, 4, 0, 1);
 
   var vaoDust = gl.createVertexArray(); gl.bindVertexArray(vaoDust);
   var bDust = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, bDust); gl.bufferData(gl.ARRAY_BUFFER, NDUST * 12, gl.STATIC_DRAW);
@@ -554,6 +578,9 @@ function createSim(P, seed){
   attrib(pHy, 'aCorner', 2);
   var bHead = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, bHead); gl.bufferData(gl.ARRAY_BUFFER, headArr.byteLength, gl.DYNAMIC_DRAW);
   attrib(pHy, 'aA', 4, 32, 0, 1); attrib(pHy, 'aB', 4, 32, 16, 1);
+  var headCol = new Float32Array(MAXT);
+  var bHeadCol = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, bHeadCol); gl.bufferData(gl.ARRAY_BUFFER, headCol.byteLength, gl.DYNAMIC_DRAW);
+  attrib(pHy, 'aC', 1, 4, 0, 1);
 
   var tipArr = new Float32Array(MAXT * 3);
   var vaoTip = gl.createVertexArray(); gl.bindVertexArray(vaoTip);
@@ -636,6 +663,8 @@ function createSim(P, seed){
     sim = createSim(P, h());
     uploaded = 0; simDebt = 0; phase = 'grow'; phaseT = 0; prevPos.clear();
     gl.bindBuffer(gl.ARRAY_BUFFER, bSeg); gl.bufferData(gl.ARRAY_BUFFER, sim.dims.MAXSEG * 32, gl.DYNAMIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, bSegCol); gl.bufferData(gl.ARRAY_BUFFER, sim.dims.MAXSEG * 4, gl.DYNAMIC_DRAW);
+    resetNetworks();
     var dust = new Float32Array(NDUST * 3), r = h();
     for (var i = 0; i < dust.length; i += 3) {
       r = (Math.imul(r, 1664525) + 1013904223) >>> 0; dust[i] = (r / 4294967296 * 2 - 1) * 2;
@@ -646,8 +675,111 @@ function createSim(P, seed){
     uploadRich(); uploadNut();
     stage.classList.remove('fading');
     if (reduced) stage.classList.add('hidden');
-    $('seedTop').textContent = seed; $('seedBottom').textContent = seed; $('genN').textContent = String(gen);
+    $('seedTop').textContent = seed; $('seedBottom').textContent = seed;
+    $('inocNote').textContent = INOC_NOTE[P.inoc];
   }
+
+  // ---- networks: which spawn grain each hypha comes from, and which grains have joined ------
+  // The model keeps no grain per hypha and no record of what a fusion joined, so the renderer infers both
+  // from data the model exposes: every new segment starts at its tip's last committed point, branches name
+  // their parent tip, and a fusion segment ends at the exact midpoint of the segment it hit.
+  var MAXC = 8, PULSES = 8;
+  var GRAIN_RGB = [[.741, .576, .976], [.545, .914, .992], [1, .722, .424], [1, .475, .776], [.945, .98, .549]];  // purple, cyan, orange, pink, yellow
+  var WHOLE_RGB = [.314, .98, .482];   // green once every grain belongs to one network
+  var COLOR_RATE = 1.2;                 // per second; a joined subnetwork eases to its new color over about 2 s
+  var segCol = null, colonyOf = new Map(), tracked = 0, nColony = 1, joins = [];   // joins: simulated hour of each join
+  var uf = new Int32Array(MAXC), ufSize = new Float64Array(MAXC), ufRgb = [], colonyRgb = new Float32Array(MAXC * 3);
+  var pulse = new Float32Array(PULSES * 4), pulseMask = new Int32Array(PULSES), pulseNext = 0;
+  var MC = 0.05, MX = 0, MY = 0, MZ = 0, midHead = null, midNext = null;   // grid of segment midpoints for fusion lookup
+
+  function find(c) { while (uf[c] !== c) { uf[c] = uf[uf[c]]; c = uf[c]; } return c; }
+  function networks() { var n = 0; for (var c = 0; c < nColony; c++) if (find(c) === c) n++; return n; }
+  function resetNetworks() {
+    var d = sim.dims;
+    if (!segCol) segCol = new Float32Array(d.MAXSEG);
+    if (!midHead) {
+      MX = Math.ceil(d.NX * d.H / MC); MY = Math.ceil(d.NY * d.H / MC); MZ = Math.ceil(d.NZ * d.H / MC);
+      midHead = new Int32Array(MX * MY * MZ); midNext = new Int32Array(d.MAXSEG);
+    }
+    midHead.fill(-1); colonyOf.clear(); tracked = 0; joins = []; pulse.fill(-1e9); pulseMask.fill(0);
+    // grains: cluster the starting tips, which sit within 0.06 mm of their grain center
+    var centers = [], tips = sim.tips;
+    for (var i = 0; i < tips.length; i++) {
+      var t = tips[i], c = -1;
+      for (var k = 0; k < centers.length; k++) if (Math.hypot(t.x - centers[k][0], t.y - centers[k][1], t.z - centers[k][2]) < 0.2) { c = k; break; }
+      if (c < 0 && centers.length < MAXC) { c = centers.length; centers.push([t.x, t.y, t.z]); }
+      colonyOf.set(t.id, Math.max(0, c));
+    }
+    nColony = Math.max(1, centers.length);
+    for (var c2 = 0; c2 < MAXC; c2++) {
+      uf[c2] = c2; ufSize[c2] = 0;
+      ufRgb[c2] = nColony === 1 ? WHOLE_RGB : GRAIN_RGB[c2 % GRAIN_RGB.length];
+      colonyRgb.set(ufRgb[c2], c2 * 3);
+    }
+  }
+  function midCell(x, y, z) {
+    var d = sim.dims, ix = Math.floor((x + d.NX * d.H / 2) / MC), iy = Math.floor((y + d.NY * d.H / 2) / MC), iz = Math.floor((z + d.NZ * d.H / 2) / MC);
+    ix = Math.min(MX - 1, Math.max(0, ix)); iy = Math.min(MY - 1, Math.max(0, iy)); iz = Math.min(MZ - 1, Math.max(0, iz));
+    return ix + MX * (iy + MY * iz);
+  }
+  // before a step: the last committed point of every tip, keyed by its float32 x, gives the grain of the next segment
+  var startKey = new Map();
+  function beforeStep() {
+    var tips = sim.tips; startKey.clear();
+    for (var i = 0; i < tips.length; i++) { var t = tips[i]; startKey.set(Math.fround(t.lx), colonyOf.get(t.id) || 0); }
+  }
+  function join(a, b, x, y, z) {
+    var ra = find(a), rb = find(b);
+    if (ra === rb) return;
+    // the larger subnetwork keeps its color; the smaller one eases into it
+    if (ufSize[ra] < ufSize[rb]) { var s = ra; ra = rb; rb = s; }
+    uf[rb] = ra; ufSize[ra] += ufSize[rb];
+    joins.push(sim.st.time);
+    if (networks() === 1) ufRgb[ra] = WHOLE_RGB;
+    var mask = 0; for (var c = 0; c < nColony; c++) if (find(c) === ra) mask |= 1 << c;
+    var p = pulseNext++ % PULSES; pulse[p * 4] = x; pulse[p * 4 + 1] = y; pulse[p * 4 + 2] = z; pulse[p * 4 + 3] = clock; pulseMask[p] = mask;
+  }
+  function afterStep() {
+    var seg = sim.seg, n = sim.st.nseg, tips = sim.tips;
+    for (var i = 0; i < tips.length; i++) { var t = tips[i]; if (!colonyOf.has(t.id)) colonyOf.set(t.id, colonyOf.get(t.parent) || 0); }
+    for (var k = tracked; k < n; k++) {
+      var o = k * 8, c = startKey.get(seg[o]);
+      if (c === undefined) c = 0;
+      segCol[k] = c; ufSize[find(c)]++;
+      // a fusion or a second segment from the same tip in this step starts where this one ends
+      startKey.set(seg[o + 4], c);
+      var ex = seg[o + 4], ey = seg[o + 5], ez = seg[o + 6];
+      for (var q = midHead[midCell(ex, ey, ez)]; q >= 0; q = midNext[q]) {
+        var p = q * 8;
+        if (Math.fround((seg[p] + seg[p + 4]) * 0.5) === ex && Math.fround((seg[p + 1] + seg[p + 5]) * 0.5) === ey && Math.fround((seg[p + 2] + seg[p + 6]) * 0.5) === ez) {
+          join(c, segCol[q], ex, ey, ez); break;
+        }
+      }
+      var mx = Math.fround((seg[o] + ex) * 0.5), my = Math.fround((seg[o + 1] + ey) * 0.5), mz = Math.fround((seg[o + 2] + ez) * 0.5), h = midCell(mx, my, mz);
+      midNext[k] = midHead[h]; midHead[h] = k;
+    }
+    tracked = n;
+  }
+  function easeColors(dt) {
+    var a = 1 - Math.exp(-COLOR_RATE * dt);
+    for (var c = 0; c < MAXC; c++) {
+      var t = ufRgb[find(c)];
+      for (var j = 0; j < 3; j++) colonyRgb[c * 3 + j] += (t[j] - colonyRgb[c * 3 + j]) * a;
+    }
+  }
+  var INOC_NOTE = {
+    mixed: 'A 4 × 3 × 4 mm substrate block, inoculated with five spawn grains mixed through it.',
+    top: 'A 4 × 3 × 4 mm substrate block, inoculated with one spawn grain on its top face.',
+    center: 'A 4 × 3 × 4 mm substrate block, inoculated with one spawn grain at its center.'
+  };
+  var COLOR_NOTE = [
+    'Each spawn grain grows its own color. When two networks fuse, a ring of light runs out from the join and they take one color. Green means one network.',
+    'Color shows the ground each hypha grew through: green where nutrient was rich, purple where it was poor.',
+    'New growth is brightest and dims as it ages.',
+    'Color shows when each hypha formed: purple first, green last.',
+    'Color shows branch order: purple for the first hyphae, green for branches nine levels out.'
+  ];
+  var colorMode = 0;
 
   // tip positions before the latest step, by tip id; frames between steps project each tip forward by that motion
   var prevPos = new Map();
@@ -663,7 +795,7 @@ function createSim(P, seed){
     simDebt += hours;
     var t0 = performance.now();
     while (simDebt >= DT && sim.tips.length) {
-      snapshotTips(); sim.step(DT); simDebt -= DT;
+      snapshotTips(); beforeStep(); sim.step(DT); afterStep(); simDebt -= DT;
       if (performance.now() - t0 > budgetMs) { simDebt = Math.min(simDebt, DT * 2); break; }
     }
   }
@@ -697,6 +829,8 @@ function createSim(P, seed){
     if (sim.st.nseg > uploaded) {
       gl.bindBuffer(gl.ARRAY_BUFFER, bSeg);
       gl.bufferSubData(gl.ARRAY_BUFFER, uploaded * 32, sim.seg, uploaded * 8, (sim.st.nseg - uploaded) * 8);
+      gl.bindBuffer(gl.ARRAY_BUFFER, bSegCol);
+      gl.bufferSubData(gl.ARRAY_BUFFER, uploaded * 4, segCol, uploaded, sim.st.nseg - uploaded);
       uploaded = sim.st.nseg;
     }
 
@@ -717,6 +851,8 @@ function createSim(P, seed){
     common(pHy); gl.uniform1i(pHy.u.uRich, 0);
     gl.uniform1f(pHy.u.uProj, H / (2 * Math.tan(FOV / 2))); gl.uniform1f(pHy.u.uRadius, 0.006); gl.uniform1f(pHy.u.uMinPx, 0.62 * dpr);
     gl.uniform1f(pHy.u.uTime, sim.st.time); gl.uniform1f(pHy.u.uYoung, YOUNG_H); gl.uniform1f(pHy.u.uAlpha, ALPHA);
+    gl.uniform1i(pHy.u.uMode, colorMode); gl.uniform1f(pHy.u.uClock, clock);
+    gl.uniform3fv(pHy.u['uColony[0]'], colonyRgb); gl.uniform4fv(pHy.u['uPulse[0]'], pulse); gl.uniform1iv(pHy.u['uPulseMask[0]'], pulseMask);
     gl.bindVertexArray(vaoHy); gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, uploaded);
 
     var n = Math.min(sim.tips.length, MAXT), f = Math.min(1, simDebt / DT), now = sim.st.time;
@@ -726,9 +862,11 @@ function createSim(P, seed){
       headArr[o] = t.lx; headArr[o + 1] = t.ly; headArr[o + 2] = t.lz; headArr[o + 3] = now;
       headArr[o + 4] = ex; headArr[o + 5] = ey; headArr[o + 6] = ez; headArr[o + 7] = t.order;
       tipArr[k * 3] = ex; tipArr[k * 3 + 1] = ey; tipArr[k * 3 + 2] = ez;
+      headCol[k] = colonyOf.get(t.id) || 0;
     }
     if (n) {
       gl.bindBuffer(gl.ARRAY_BUFFER, bHead); gl.bufferSubData(gl.ARRAY_BUFFER, 0, headArr, 0, n * 8);
+      gl.bindBuffer(gl.ARRAY_BUFFER, bHeadCol); gl.bufferSubData(gl.ARRAY_BUFFER, 0, headCol, 0, n);
       gl.bindVertexArray(vaoHead); gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, n);
     }
     if (showTips && n) {
@@ -747,7 +885,7 @@ function createSim(P, seed){
     lastUi = clock;
     var s = sim.summary(), st = sim.st;
     $('tipN').textContent = sim.tips.length.toLocaleString(); $('joinN').textContent = st.fusions.toLocaleString();
-    $('colN').textContent = (s.colonized * 100).toFixed(0) + '%';
+    $('colN').textContent = (s.colonized * 100).toFixed(0) + '%'; $('netN').textContent = String(networks());
     var word = phase === 'grow' ? 'colonizing' : phase === 'hold' ? 'growth stopped' : 'fading';
     $('phaseWord').textContent = word;
     $('statLine').textContent = 'gen ' + gen + ' · ' + st.time.toFixed(1) + ' h · ' + fmtLen(st.totalLen) + ' of hyphae · ' + (paused ? 'paused' : word);
@@ -764,6 +902,7 @@ function createSim(P, seed){
       if (orbitOn) orbitYaw += IDLE_ORBIT * dt;
       if (frameN % 10 === 0) uploadNut();
     }
+    easeColors(dt);
     draw(); ui();
   }
 
@@ -804,6 +943,9 @@ function createSim(P, seed){
   $('c-het').addEventListener('change', restartBlock);
   $('c-inoc').value = P.inoc;
   $('c-inoc').addEventListener('change', function (e) { P.inoc = e.target.value; restartBlock(); });
+  function setColor(m) { colorMode = m; $('c-color').value = String(m); $('colorNote').textContent = COLOR_NOTE[m]; }
+  setColor(colorMode);
+  $('c-color').addEventListener('change', function (e) { setColor(+e.target.value); });
   $('c-tips').checked = showTips;
   $('c-tips').addEventListener('change', function (e) { showTips = e.target.checked; });
 
@@ -826,6 +968,7 @@ function createSim(P, seed){
   startGeneration();
   if (!reduced) grow(WARMUP_H, 1e9);
   window.__sim = function () { return sim; };
+  window.__joins = function () { return { grains: nColony, joins: joins.slice() }; };
   requestAnimationFrame(frame);
 })();
 </script>

@@ -24,9 +24,22 @@ What v4 changes is the renderer and the page:
 
 - Hyphae are WebGL 2 ribbons without end caps. Translucent caps overlap at
   joints and bead the strand.
-- Color comes from the starting nutrient rank at the segment start, between
-  the 5th and 95th percentiles: purple poor, cyan middle, green rich. New
-  growth starts near `fg` and fades to its ground color over 2.5 h.
+- Color: the `color hyphae by` select picks one of five modes.
+  - **Connectivity** (default). Each spawn grain grows in its own color:
+    purple, cyan, orange, pink, yellow. When two networks fuse, a ring of
+    light runs out from the join through the joined network. The smaller
+    network then eases into the larger one's color over about 2 s. When
+    every grain belongs to one network, the colony turns green. The model
+    keeps no grain per hypha, so the renderer infers it. A new segment starts
+    at its tip's last committed point, and a branch names its parent tip. A
+    fusion segment ends at the exact midpoint of the segment it hit.
+  - **Ground nutrient.** The starting nutrient rank at the segment start,
+    between the 5th and 95th percentiles: purple poor, cyan middle, green
+    rich.
+  - **Natural**, **time of formation**, and **branch order**, from the
+    reference renderer, in Dracula colors.
+  - In connectivity and ground nutrient, new growth starts near `fg` and
+    fades to its color over 2.5 h.
 - Depth: substrate opacity sets how much light the substrate takes between
   the camera and each hypha. That loss dims the hypha and blurs it by up to
   `SCATTER` pixels, so blur grows with depth in the substrate. At opacity 0,
@@ -34,7 +47,10 @@ What v4 changes is the renderer and the page:
 - Camera: `ZOOM` 1 makes the block's projection cover the frame on both axes
   at the base view. The default 1.1 overfills a little, so the view sits
   inside the block.
-- Inoculation: one spawn grain on the top face by default.
+- Inoculation: five spawn grains mixed through the block by default. On
+  today's seed they join at 4.8, 5.3, 6.6, and 8.1 simulated hours.
+- Warm-up: 1 simulated hour before the first frame, so the grains show
+  apart for about 13 s before the first join.
 - Substrate: dust points, green in rich ground and purple in poor ground.
   Dust fades as nutrient is consumed. There is no block outline and no
   ray-marched volume.
@@ -120,6 +136,8 @@ width formula `(1.4 + 0.6 * o) * cord`, and the cord growth `smooth(0, 60, age)`
 | 2026-11-25 | Not happy with v3. Built a reference model with Fable, happy with the core model, adapt it to the site style | v4: reference model unchanged, Dracula renderer, motif in color only |
 
 | 2026-11-25 | Likes v4. Expose controls in a tab, slower, spawn on the top face, zoom in so the block is slightly larger than the frame, blur should follow depth in the substrate | Substrate tab, 0.3 h/s, top inoculation, cover-fit zoom 1.1, scattering blur set by substrate opacity in place of defocus |
+
+| 2026-11-25 | Seed growth from several spots, one color per subnetwork, and a color change when they connect. Keep the reference color modes, with this one as the default. Shorten the warm-up so the colors last longer | Mixed inoculation by default, connectivity color mode with join rings, `color hyphae by` select with five modes, warm-up 3 h to 1 h |
 
 The user's last word on v3: "a good start". On v4: "I like this".
 

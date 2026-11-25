@@ -179,6 +179,8 @@ Reduced-motion users get one fully grown network, no fade, no parallax.
 | 2026-11-25 | Blur comes from depth in the substrate, set by substrate opacity, not from a focal plane | The user's call: blur must read as how far back in the substrate a hypha sits. |
 | 2026-11-25 | A seventh tab, `substrate`, exposes the simulation controls | The user asked for the controls in a foreground tab. The colophon keeps the prose on how the site works. |
 | 2026-11-25 | Default view sits inside the block: zoom 1.1 of a cover fit, spawn grain on the top face, 0.3 simulated hours per second | The user asked for a slower run seeded from the top and a block slightly larger than the frame. |
+| 2026-11-25 | Default color mode is connectivity: one color per spawn grain, a ring of light at each join, green once all grains form one network. Ground nutrient stays as a mode. Default inoculation is five mixed grains | The user asked to show subnetworks joining into one network, and to keep the reference color modes as options. Supersedes "motif in color only" as the default. Grain colors use orange, pink, and yellow outside their text roles, in the background only. |
+| 2026-11-25 | Spawn grains on the cube faces wait for a model change | Placement lives inside the model block, which stays byte-identical to the reference. Mixed grains come first. |
 
 ## Open questions
 
