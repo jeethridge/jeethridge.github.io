@@ -155,6 +155,14 @@ details b{color:var(--cyan);font-weight:500}
             </select></label>
           <label class="row"><span>nutrient patchiness</span><output></output><input id="c-het" type="range" min="0" max="100" step="5"></label>
         </fieldset>
+        <fieldset>
+          <legend>settings · saved in this browser</legend>
+          <p class="note" id="savedNote" aria-live="polite" style="margin:0;color:var(--dim)">site defaults</p>
+          <div class="ctl">
+            <button type="button" id="c-reset">reset to site defaults</button>
+            <button type="button" id="c-copy">copy as defaults</button>
+          </div>
+        </fieldset>
         <details>
           <summary>what the model computes</summary>
           <ul>
@@ -445,28 +453,32 @@ function createSim(P, seed){
   function randomSeed() { var s = ''; for (var i = 0; i < 6; i++) s += '0123456789abcdef'[Math.floor(Math.random() * 16)]; return s; }
 
   // ---- tunables (world units are mm: the block spans -2..2, -1.5..1.5, -2..2) --------
-  // the reference defaults, except inoculation on the top face; growth controls change P live
+  // site defaults. "copy as defaults" in the substrate tab prints these two lines with the saved settings.
+  // P holds the reference growth parameters, except inoculation, and growth controls change P live.
+  // HOURS_PER_SEC: simulated hours per real second; about 60 h colonizes the block.
+  // ZOOM: 1 fits the block to cover the frame on both axes at the base view; above 1 overfills.
+  // SUBSTRATE: substrate opacity; light lost through the substrate dims and blurs hyphae deeper in the block.
+  // COLOR_MODE: index into the `color hyphae by` select. ORBIT: slow self-orbit, off under reduced motion.
   var P = { vmax: 0.25, beta: 1, angle: 62 * Math.PI / 180, lp: 1.2, auto: 2, chemo: 0.6, fuse: 0.5, het: 0.5, inoc: 'mixed' };
+  var HOURS_PER_SEC = 0.3, ZOOM = 1.1, SUBSTRATE = 0.3, COLOR_MODE = 0, SHOW_TIPS = true, ORBIT = true;
+
   var DT = 0.02;              // simulated hours per model step, as in the reference
-  var HOURS_PER_SEC = 0.3;    // simulated hours per real second; about 60 h colonizes the block
   var WARMUP_H = 1;           // simulated hours grown before the first frame; short, so the grains show apart before they join
   var GROW_LIMIT_H = 96;      // a generation is forced to finish after this many simulated hours
   var HOLD = 8, FADE = 14;    // seconds
   var FOV = 40 * Math.PI / 180;
-  var ZOOM = 1.1;             // 1 fits the block to cover the frame on both axes at the base view; above 1 overfills
   var BASE_YAW = 0.7, BASE_PITCH = 0.42;
   var IDLE_ORBIT = 0.05;      // radians per second of slow self-orbit
   var DRAG_RATE = 0.006;      // radians of rotation per CSS pixel of drag
   var PITCH_LIMIT = 1.45;     // radians; the camera stops short of looking straight down or up
   var WHEEL_RATE = 0.0006;    // zoom changes by exp(-deltaY * WHEEL_RATE) per wheel event
   var ZOOM_MIN = 0.4, ZOOM_MAX = 2;
-  var SUBSTRATE = 0.3;        // substrate opacity; light lost through the substrate dims and blurs hyphae deeper in the block
   var SCATTER = 5;            // blur in CSS pixels for a hypha whose light the substrate absorbs fully
   var ALPHA = 0.7;            // hypha opacity at the near face
   var YOUNG_H = 2.5;          // hours over which new growth fades from bright to its ground color
   var NDUST = 2600;           // substrate dust points
   var TIP_PX = 2.2;           // pink tip point size in CSS pixels
-  var showTips = true;
+  var showTips = SHOW_TIPS;
 
   // ---- WebGL --------------------------------------------------------------------------
   var canvas = $('gl');
@@ -660,7 +672,7 @@ function createSim(P, seed){
 
   // ---- state --------------------------------------------------------------------------
   var sim = null, uploaded = 0, seed, gen = 1, phase = 'grow', phaseT = 0, simDebt = 0;
-  var paused = false, hidden = false, orbitOn = !reduced, orbitYaw = 0;
+  var paused = false, hidden = false, orbitOn = ORBIT && !reduced, orbitYaw = 0;
   var dragPitch = 0, drag = null, clock = 0;
   var stage = $('stage'), term = $('term');
 
@@ -785,7 +797,7 @@ function createSim(P, seed){
     'Color shows when each hypha formed: purple first, green last.',
     'Color shows branch order: purple for the first hyphae, green for branches nine levels out.'
   ];
-  var colorMode = 0;
+  var colorMode = COLOR_MODE;
 
   // tip positions before the latest step, by tip id; frames between steps project each tip forward by that motion
   var prevPos = new Map();
@@ -928,7 +940,9 @@ function createSim(P, seed){
     if (!onBackground(e)) return;
     e.preventDefault();
     setZoom(ZOOM * Math.exp(-e.deltaY * WHEEL_RATE));
+    clearTimeout(wheelSave); wheelSave = setTimeout(save, 400);
   }, { passive: false });
+  var wheelSave = 0;
   $('regrow').addEventListener('click', function () {
     seed = randomSeed(); gen = 1;
     try { history.replaceState(null, '', '#' + seed); } catch (e) {}
@@ -938,9 +952,8 @@ function createSim(P, seed){
   pauseBtn.addEventListener('click', function () { paused = !paused; pauseBtn.textContent = paused ? 'resume' : 'pause'; pauseBtn.setAttribute('aria-pressed', paused ? 'true' : 'false'); });
   var orbitBtn = $('orbit'), orbitBox = $('c-orbit');
   function setOrbit(on) { orbitOn = on; orbitBtn.setAttribute('aria-pressed', on ? 'true' : 'false'); orbitBox.checked = on; }
-  setOrbit(orbitOn);
-  orbitBtn.addEventListener('click', function () { setOrbit(!orbitOn); });
-  orbitBox.addEventListener('change', function () { setOrbit(orbitBox.checked); });
+  orbitBtn.addEventListener('click', function () { setOrbit(!orbitOn); save(); });
+  orbitBox.addEventListener('change', function () { setOrbit(orbitBox.checked); save(); });
 
   // ---- substrate tab ------------------------------------------------------------------
   function restartBlock() { startGeneration(); if (!reduced) grow(WARMUP_H, 1e9); }
@@ -959,21 +972,101 @@ function createSim(P, seed){
   };
   Object.keys(controls).forEach(function (id) {
     var c = controls[id], el = $('c-' + id), out = el.parentNode.querySelector('output');
-    el.value = c[0](); out.textContent = c[2](+el.value);
     el.addEventListener('input', function () { c[1](+el.value); out.textContent = c[2](+el.value); });
+    el.addEventListener('change', save);
   });
   $('c-het').addEventListener('change', restartBlock);
   function setZoom(z) {
     ZOOM = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, z));
     var el = $('c-zoom'); el.value = ZOOM; el.parentNode.querySelector('output').textContent = controls.zoom[2](ZOOM);
   }
-  $('c-inoc').value = P.inoc;
-  $('c-inoc').addEventListener('change', function (e) { P.inoc = e.target.value; restartBlock(); });
+  $('c-inoc').addEventListener('change', function (e) { P.inoc = e.target.value; restartBlock(); save(); });
   function setColor(m) { colorMode = m; $('c-color').value = String(m); $('colorNote').textContent = COLOR_NOTE[m]; }
-  setColor(colorMode);
-  $('c-color').addEventListener('change', function (e) { setColor(+e.target.value); });
-  $('c-tips').checked = showTips;
-  $('c-tips').addEventListener('change', function (e) { showTips = e.target.checked; });
+  $('c-color').addEventListener('change', function (e) { setColor(+e.target.value); save(); });
+  $('c-tips').addEventListener('change', function (e) { showTips = e.target.checked; save(); });
+
+  // ---- saved settings -----------------------------------------------------------------
+  // Each change in the substrate tab saves to localStorage at once. Only settings that differ from the site
+  // defaults are stored, so a key the visitor never changed follows the defaults in this file. The URL hash
+  // holds the seed only. Camera rotation is not a setting.
+  var STORE_KEY = 'substrate-settings', STORE_V = 1;
+  function r4(v) { return Math.round(v * 1e4) / 1e4; }
+  function pGet(k) { return function () { return r4(P[k]); }; }
+  function pSet(k) { return function (v) { P[k] = v; }; }
+  var settings = {
+    vmax: [pGet('vmax'), pSet('vmax')], beta: [pGet('beta'), pSet('beta')], lp: [pGet('lp'), pSet('lp')],
+    auto: [pGet('auto'), pSet('auto')], fuse: [pGet('fuse'), pSet('fuse')], het: [pGet('het'), pSet('het')],
+    angle: [function () { return Math.round(P.angle / DEG); }, function (v) { P.angle = v * DEG; }],
+    inoc: [function () { return P.inoc; }, pSet('inoc')],
+    speed: [function () { return r4(HOURS_PER_SEC); }, function (v) { HOURS_PER_SEC = v; }],
+    zoom: [function () { return Math.round(ZOOM * 100) / 100; }, function (v) { setZoom(v); }],
+    opacity: [function () { return r4(SUBSTRATE); }, function (v) { SUBSTRATE = v; }],
+    color: [function () { return colorMode; }, function (v) { setColor(v); }],
+    tips: [function () { return showTips; }, function (v) { showTips = v; }],
+    orbit: [function () { return orbitOn; }, function (v) { setOrbit(v && !reduced); }]
+  };
+  var SITE = {};
+  Object.keys(settings).forEach(function (k) { SITE[k] = settings[k][0](); });
+  SITE.orbit = ORBIT;
+  function valid(k, v) {
+    if (typeof v !== typeof SITE[k]) return false;
+    if (k === 'inoc') return INOC_NOTE.hasOwnProperty(v);
+    if (k === 'color') return v === Math.floor(v) && v >= 0 && v < COLOR_NOTE.length;
+    return typeof v !== 'number' || isFinite(v);
+  }
+  function diffs() {
+    var d = {};
+    Object.keys(settings).forEach(function (k) { var v = settings[k][0](); if (v !== SITE[k]) d[k] = v; });
+    return d;
+  }
+  function note(s) { $('savedNote').textContent = s; }
+  function status() {
+    var n = Object.keys(diffs()).length;
+    note(n ? 'saved · ' + n + (n === 1 ? ' setting differs' : ' settings differ') + ' from site defaults' : 'site defaults');
+  }
+  function save() {
+    var d = diffs();
+    try {
+      if (Object.keys(d).length) localStorage.setItem(STORE_KEY, JSON.stringify({ v: STORE_V, settings: d }));
+      else localStorage.removeItem(STORE_KEY);
+    } catch (e) { return note('not saved: this browser blocks local storage'); }
+    status();
+  }
+  function loadSaved() {
+    try { var s = JSON.parse(localStorage.getItem(STORE_KEY)); return s && s.v === STORE_V && s.settings ? s.settings : {}; }
+    catch (e) { return {}; }
+  }
+  function syncControls() {
+    Object.keys(controls).forEach(function (id) {
+      var el = $('c-' + id); el.value = controls[id][0](); el.parentNode.querySelector('output').textContent = controls[id][2](+el.value);
+    });
+    $('c-inoc').value = P.inoc; setColor(colorMode); $('c-tips').checked = showTips; setOrbit(orbitOn);
+  }
+  function apply(s) {
+    Object.keys(s).forEach(function (k) { if (settings.hasOwnProperty(k) && valid(k, s[k])) settings[k][1](s[k]); });
+    syncControls();
+  }
+  // the two site-default lines in the tunables block, with the current settings
+  function snippet() {
+    return '  var P = { vmax: ' + r4(P.vmax) + ', beta: ' + r4(P.beta) + ', angle: ' + Math.round(P.angle / DEG) + ' * Math.PI / 180' +
+      ', lp: ' + r4(P.lp) + ', auto: ' + r4(P.auto) + ', chemo: ' + r4(P.chemo) + ', fuse: ' + r4(P.fuse) + ', het: ' + r4(P.het) +
+      ", inoc: '" + P.inoc + "' };\n" +
+      '  var HOURS_PER_SEC = ' + r4(HOURS_PER_SEC) + ', ZOOM = ' + Math.round(ZOOM * 100) / 100 + ', SUBSTRATE = ' + r4(SUBSTRATE) +
+      ', COLOR_MODE = ' + colorMode + ', SHOW_TIPS = ' + showTips + ', ORBIT = ' + orbitOn + ';\n';
+  }
+  $('c-reset').addEventListener('click', function () {
+    var restart = P.inoc !== SITE.inoc || settings.het[0]() !== SITE.het;
+    try { localStorage.removeItem(STORE_KEY); } catch (e) {}
+    apply(SITE); status();
+    if (restart) restartBlock();
+  });
+  $('c-copy').addEventListener('click', function () {
+    var text = snippet();
+    function fail() { console.log(text); note('clipboard blocked: the snippet is in the console'); }
+    try { navigator.clipboard.writeText(text).then(function () { note('copied: paste it over the two site-default lines'); }, fail); }
+    catch (e) { fail(); }
+  });
+  apply(loadSaved()); status();
 
   var tabs = Array.prototype.slice.call(document.querySelectorAll('.tabs a')), main = document.querySelector('main');
   tabs.forEach(function (a) {
@@ -994,7 +1087,8 @@ function createSim(P, seed){
   startGeneration();
   if (!reduced) grow(WARMUP_H, 1e9);
   window.__sim = function () { return sim; };
-  window.__joins = function () { return { grains: nColony, joins: joins.slice() }; };
+  window.__settings = function () { return { site: SITE, saved: diffs(), snippet: snippet() }; };
+  window.__joins =function () { return { grains: nColony, joins: joins.slice() }; };
   requestAnimationFrame(frame);
 })();
 </script>

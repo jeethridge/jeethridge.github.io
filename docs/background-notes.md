@@ -69,6 +69,15 @@ What v4 changes is the renderer and the page:
   opacity, zoom, speed, tips, orbit, the six growth parameters (live), and
   inoculation and patchiness (both restart the block). Tabs do not change
   the URL hash, because the hash holds the seed.
+- Saved settings: each change in the tab saves to `localStorage` under
+  `substrate-settings` at once. Wheel zoom saves too. Only settings that
+  differ from the site defaults are stored, with a version number. The saved
+  settings load before the warm-up. Camera rotation is not saved. The hash
+  keeps the seed only. "reset to site defaults" clears the store. "copy as
+  defaults" copies the two site-default lines at the top of the tunables
+  block. To promote a setup, paste those lines over the same two lines.
+  A first-time visitor gets the site defaults, and nothing is stored until a
+  control changes.
 
 v4 tunables sit under the `tunables` comment in the second script block. The
 v3 tunables table below applies to v3 only.
@@ -143,6 +152,7 @@ width formula `(1.4 + 0.6 * o) * cord`, and the cord growth `smooth(0, 60, age)`
 
 | 2026-11-25 | Seed growth from several spots, one color per subnetwork, and a color change when they connect. Keep the reference color modes, with this one as the default. Shorten the warm-up so the colors last longer | Mixed inoculation by default, connectivity color mode with join rings, `color hyphae by` select with five modes, warm-up 3 h to 1 h |
 | 2026-11-25 | Remove the parallax. Grab and rotate the block with the mouse, zoom with the wheel. Then: "much more comfortable than before" | Pointer tilt, idle drift, and panel shift removed. Drag rotates, wheel zooms |
+| 2026-11-25 | Save simulation settings across reloads, then promote favorites to the site defaults | Autosave to `localStorage` (only settings that differ from the defaults), reset button, "copy as defaults" snippet. Site defaults gathered into two lines |
 
 The user's last word on v3: "a good start". On v4: "I like this".
 
