@@ -22,7 +22,8 @@ touching code.
 - Tags, all pushed: `legacy-jekyll-2015` (the retired Jekyll site),
   `checkpoint-2026-11-24-pockets` (v3 before the smoothing pass), and
   `checkpoint-2026-11-25-colonization` (v4 before connectivity color, drag
-  control, and saved settings).
+  control, and saved settings), and `checkpoint-2026-11-25-saved-settings`
+  (v4 with saved settings and the user's tuned defaults).
 - Harness: the repo is a target of the `hjp` workspace
   (`~/harnesses/hjp`). Its `.harness` link and `CLAUDE.local.md` stay out of
   this repo's history. The reference model lives in that workspace at
@@ -127,11 +128,10 @@ Not started:
 1. Ask the user whether the v4 background needs more tuning. Known open
    items: the controls panel overflows a 900 px-tall window, and a mature
    colony is bright behind the home panel.
-2. Ask whether to tag the current state as a new checkpoint.
-3. Decide open question 1 in the brief (code block or prose) and record it.
-4. Decide the static site generator (open question 2) and scaffold it on
+2. Decide open question 1 in the brief (code block or prose) and record it.
+3. Decide the static site generator (open question 2) and scaffold it on
    this branch.
-5. Build the foreground sections in the order listed at the end of
+4. Build the foreground sections in the order listed at the end of
    `docs/background-notes.md`.
-6. On a later push, with the user's confirmation, set the GitHub default
+5. On a later push, with the user's confirmation, set the GitHub default
    branch to `main`.
