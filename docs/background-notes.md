@@ -185,13 +185,18 @@ The user's last word on v3: "a good start". On v4: "I like this".
 
 ## How to verify a change
 
-1. Open the file in a browser. The first frame must show growth, not an
-   empty block (twelve seconds of warm-up run before the first frame).
-2. Watch for ninety seconds. Tips, fusions, and hyphae counts in the card
-   must rise, and the phase must reach "fully colonized" then "fading".
+1. Serve the repo with `python3 -m http.server 8765 --bind 127.0.0.1` and
+   open the page. The first frame must show five separate grains, not an
+   empty block (1 simulated hour of warm-up runs before the first frame).
+2. Watch for thirty seconds. The grains must join, and each join must show a
+   ring of light. A full generation takes about four minutes.
 3. Open the console. There must be no errors.
-4. Toggle "orbit" and move the pointer. The block must turn as one body.
-5. Run `node --check` on the extracted script if the page shows nothing.
+4. Drag the background and turn the wheel there. The block must turn as one
+   body, and the zoom slider must follow the wheel.
+5. If the change touches settings, change a control in `7 substrate` and
+   reload. The value must persist. Then reset, and the site defaults must
+   return.
+6. Run `node --check` on the extracted script if the page shows nothing.
    The assembly step in `plans/handoff.md` does this.
 
 ## After the background: the foreground

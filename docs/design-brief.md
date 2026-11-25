@@ -82,9 +82,15 @@ in the same colors.
 
 ### Background: depth and slow motion
 
-Two prototypes exist. Both share the terminal overlay, the parallax, and the
-depth-of-field treatment: blurred far and near layers around a sharp focal
-plane, pointer tilt by depth, and self-drift with no pointer.
+**v4, colonization** (`prototypes/colonization/index.html`, current). It runs
+the reference colonization model unchanged in a Dracula WebGL 2 renderer. It
+has no parallax and no focal plane: the visitor drags to rotate and wheels to
+zoom, and blur follows depth in the substrate. `docs/background-notes.md`
+describes it in full. The decisions table below records its choices.
+
+The earlier prototypes below share the terminal overlay, the parallax, and
+the depth-of-field treatment: blurred far and near layers around a sharp
+focal plane, pointer tilt by depth, and self-drift with no pointer.
 
 **v1, breathing field** (`prototypes/background/index.html`, checkpoint).
 Three layers. Hyphae spawn at edges and in the interior, grow at about 11 to
@@ -92,8 +98,8 @@ Three layers. Hyphae spawn at edges and in the interior, grow at about 11 to
 between silicon and mycelium on a ninety-second clock. The clock is global,
 so the morph is a function of time.
 
-**v3, fruiting block** (`prototypes/fruiting-block/index.html`, current
-direction). One true 3-D block, not layers. A 28³ voxel grid of nutrient
+**v3, fruiting block** (`prototypes/fruiting-block/index.html`,
+checkpoint). One true 3-D block, not layers. A 28³ voxel grid of nutrient
 weights is rich throughout (floor 0.55, 3-D value noise above it) with three
 to five low-nutrient pockets carved out by Gaussian voids. Pockets are hard
 to colonize: tips slow, branch rarely, grow as traces, and often stall at a

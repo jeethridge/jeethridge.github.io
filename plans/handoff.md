@@ -5,9 +5,10 @@ Written 2026-11-25 for a fresh session with no prior context.
 ## Objective of the next session
 
 The background is at a checkpoint the user likes: v4,
-`prototypes/colonization/index.html`. Take further background critiques if
-the user has any, then start the foreground. Read `docs/design-brief.md` and
-`docs/background-notes.md` before touching code.
+`prototypes/colonization/index.html`, with the user's tuned site defaults.
+Take further background critiques if the user has any, then start the
+foreground. Read `docs/design-brief.md` and `docs/background-notes.md` before
+touching code.
 
 ## Branch state
 
@@ -15,11 +16,13 @@ the user has any, then start the foreground. Read `docs/design-brief.md` and
   (`jeethridge/jeethridge.github.io`).
 - `main`: the scaffold commit on top of the Jekyll history. Pushed. The
   remote default branch is still `master`.
-- `planning/site-design`: all design work. Pushed, tracking
-  `origin/planning/site-design`. Nothing uncommitted.
+- `planning/site-design`: all design work, tracking
+  `origin/planning/site-design`. The last commit is the handoff refresh after
+  `d5b5271`. Check `git status` for whether it is pushed.
 - Tags, all pushed: `legacy-jekyll-2015` (the retired Jekyll site),
   `checkpoint-2026-11-24-pockets` (v3 before the smoothing pass), and
-  `checkpoint-2026-11-25-colonization` (v4 at this handoff).
+  `checkpoint-2026-11-25-colonization` (v4 before connectivity color, drag
+  control, and saved settings).
 - Harness: the repo is a target of the `hjp` workspace
   (`~/harnesses/hjp`). Its `.harness` link and `CLAUDE.local.md` stay out of
   this repo's history. The reference model lives in that workspace at
@@ -37,15 +40,18 @@ git checkout planning/site-design
 git pull
 git status --short --branch
 git log --oneline -8
-xdg-open prototypes/colonization/index.html
+python3 -m http.server 8765 --bind 127.0.0.1
 ```
+
+Then open http://127.0.0.1:8765/prototypes/colonization/index.html. The
+Chrome extension refuses `file://` URLs, so serve the repo.
 
 `git status` must print a clean tree on `planning/site-design`.
 
 ## Editing and checking the prototype
 
-The prototype is one standalone HTML file. Edit it in place. After an edit,
-run these three checks:
+The prototype is one standalone HTML file with no build step. Edit it in
+place. After an edit, run these three checks:
 
 1. Model unchanged. This `diff` must print nothing:
    ```sh
@@ -56,13 +62,30 @@ run these three checks:
    ```sh
    node -e 'const fs=require("fs");const s=fs.readFileSync("prototypes/colonization/index.html","utf8");fs.writeFileSync("/tmp/v4.js",s.match(/<script>([\s\S]*?)<\/script>/)[1]);' && node --check /tmp/v4.js
    ```
-3. Render: open the file in a browser and follow "How to verify a change" in
+3. Render: open the served page and follow "How to verify a change" in
    `docs/background-notes.md`. For a headless check, Playwright's cached
    Chromium is at `~/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome`.
    Launch it with `--use-angle=swiftshader` for WebGL 2.
 
+The Chrome extension blocks tool output that contains `localStorage` data or
+the "copy as defaults" snippet. Verify saved settings through the controls
+and the status line in the `7 substrate` tab.
+
 Commit each accepted change as a checkpoint with a conventional-commit
-subject. Push at the end of the session with the user's confirmation.
+subject. Log it in the critique log and the decisions table. Push only with
+the user's confirmation.
+
+## Site defaults and saved settings
+
+The site defaults are the two lines that start with `var P = {` and
+`var HOURS_PER_SEC =` at the top of the tunables block. Both sit outside
+SIM-BEGIN/SIM-END. To promote a setup, the user tunes in the `7 substrate`
+tab, clicks "copy as defaults", and pastes the snippet. Replace those two
+lines with it.
+
+Current defaults: tip extension 0.26 mm/h, patchiness 65%, five mixed
+grains, 0.25 simulated hours per second, zoom 2, substrate opacity 51%,
+connectivity color, tips on, orbit on at 1.1°/s.
 
 ## Nothing half-finished
 
@@ -73,8 +96,10 @@ Done:
 - Five design canvas artboards exported to `design/canvas/`.
 - Background prototypes v1 to v3 (checkpoints).
 - Background v4: the reference model in a Dracula WebGL 2 renderer, the
-  `7 substrate` controls tab, top-face spawn, cover-fit zoom, blur from
-  depth in the substrate, and live hyphal heads for smooth growth.
+  `7 substrate` controls tab, blur from depth in the substrate, live hyphal
+  heads, connectivity color with join rings, drag to rotate and wheel to
+  zoom, an orbit speed slider, and saved settings with reset and "copy as
+  defaults".
 
 Not started:
 - Moving the model into a Web Worker. Do it only if the user sees hitches
@@ -102,10 +127,11 @@ Not started:
 1. Ask the user whether the v4 background needs more tuning. Known open
    items: the controls panel overflows a 900 px-tall window, and a mature
    colony is bright behind the home panel.
-2. Decide open question 1 in the brief (code block or prose) and record it.
-3. Decide the static site generator (open question 2) and scaffold it on
+2. Ask whether to tag the current state as a new checkpoint.
+3. Decide open question 1 in the brief (code block or prose) and record it.
+4. Decide the static site generator (open question 2) and scaffold it on
    this branch.
-4. Build the foreground sections in the order listed at the end of
+5. Build the foreground sections in the order listed at the end of
    `docs/background-notes.md`.
-5. On a later push, with the user's confirmation, set the GitHub default
+6. On a later push, with the user's confirmation, set the GitHub default
    branch to `main`.
